@@ -1,6 +1,6 @@
 // src/app.tsx
 import React from 'react';
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction  } from 'express';
 const { renderToString } = require('react-dom/server');
 
 interface ExpressRequest extends Request {
@@ -16,8 +16,23 @@ declare module 'react' {
     }
 }
 
+function processResponse(req: ExpressRequest, res: Response, next: NextFunction) {
+    const originalSend: (body?: any) => Response = res.send.bind(res); 
+    res.send = function (data: any): Response {
+        if (typeof data === 'string') {
+            return originalSend(data);
+        }
+        return originalSend(renderToString(data));
+    };
+    next();
+}
+
 const app = express();
+
 app.use('/static', express.static('node_modules'));
+
+app.use(processResponse);
+
 const port = process.env.PORT || 3000;
 
 const MainTemplate = (
@@ -76,16 +91,17 @@ const MainTemplate = (
 )
 
 app.get('/', (req: Request, res: Response) => {
-  res.send(renderToString(MainTemplate));
+  res.send(MainTemplate);
 });
 
 app.get('/learn.json', (req: Request, res: Response) => {
-    res.send({});
+    res.send('{}');
   });
 
 app.get('/new-todo', (req: ExpressRequest, res: Response) => {
+    // in a proper way this should always get sanitize
     const { text } = req.query
-    res.send(renderToString(
+    res.send(
         <li className="">
             <div className="view">
                 <input
@@ -102,7 +118,7 @@ app.get('/new-todo', (req: ExpressRequest, res: Response) => {
                 className="edit"
             />
         </li>
-    ))
+    )
 });
 
 app.listen(port, () => {
