@@ -1,5 +1,6 @@
 // src/app.tsx
 import React from 'react';
+import crypto from 'crypto';
 import express, { Request as ExpressRequest, Response, NextFunction  } from 'express';
 const { renderToString } = require('react-dom/server');
 
@@ -13,6 +14,7 @@ declare module 'react' {
     interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
       // extends React's HTMLAttributes
       _?: string;
+      _1?: string;
     }
 }
 
@@ -35,7 +37,38 @@ app.use(processResponse);
 
 const port = process.env.PORT || 3000;
 
-const MainTemplate = (
+interface Todo {
+    id: string;
+    text: string;
+    completed: boolean;
+};
+
+interface TodoProps {
+    id: string;
+    text: string;
+};
+
+interface Todos {
+    todos: Todo[]; // An array of Todo objects
+};
+
+const todos: Todo[] = []; // An empty array of Todo objects
+
+const Todo: React.FC<TodoProps> = ({ id, text }) => (
+    <li key={id}>
+        <div className="view">
+            <input className="toggle" type="checkbox" />
+            <label>{text}</label>
+            <button className="destroy" />
+        </div>
+        <input className="edit" />
+    </li>
+)
+
+// const completed = todos.filter(c => c.completed)
+const uncompleted = () => todos.filter(c => !c.completed)
+
+const MainTemplate: React.FC<Todos> = ({ todos }) => (
     <html lang="en" data-framework="htmx">
         <head>
             <meta charSet="utf-8" />
@@ -44,8 +77,10 @@ const MainTemplate = (
             <link rel="stylesheet" href="static/todomvc-app-css/index.css" type="text/css" />
         </head>
         <body>
-            <section className="todoapp">
-                <header className="header">
+            <section className="todoapp" _="on load fetch /update-counts then put the result into .todo-count">
+                <header
+                    className="header" 
+                    _="on keyup[keyCode==13] fetch /update-counts then put the result into .todo-count">
                     <h1>todos</h1>
                     <input 
                         id="new-todo"
@@ -62,9 +97,10 @@ const MainTemplate = (
                 <section className="main">
                     <input id="toggle-all" className="toggle-all" type="checkbox" />
                     <label htmlFor="toggle-all">Mark all as complete</label>
-                    <ul className="todo-list"></ul>
+                    <ul className="todo-list">{todos.map(Todo)}</ul>
                 </section>
                 <footer className="footer">
+                    <span className="todo-count" />
                     <ul className="filters">
                         <li>
                             <a className="selected" href="#/">All</a>
@@ -90,22 +126,25 @@ const MainTemplate = (
     </html>
 )
 
-app.get('/', (req: Request, res: Response) => res.send(MainTemplate));
+app.get('/', (req: Request, res: Response) => {
+    res.send(<MainTemplate todos={todos} />);
+});
 
 app.get('/learn.json', (req: Request, res: Response) => res.send('{}'));
+
+app.get('/update-counts', (req: Request, res: Response) => res.send(
+    <>
+        <strong>{uncompleted().length}</strong>{` item${uncompleted().length === 1 ? '' : 's'} left`}
+    </>
+));
 
 app.get('/new-todo', (req: Request, res: Response) => {
     // in a proper way this should always get sanitize
     const { text } = req.query
+    const id = crypto.randomUUID()
+    todos.push({ id, text, completed: false })
     res.send(
-        <li>
-            <div className="view">
-                <input className="toggle" type="checkbox" />
-                <label>{text}</label>
-                <button className="destroy" />
-            </div>
-            <input className="edit" />
-        </li>
+        <Todo id={id} text={text} />
     )
 });
 
