@@ -43,13 +43,6 @@ interface Todo {
   editing?: boolean
 }
 
-interface TodoProps {
-  id: string
-  text: string
-  completed?: boolean
-  editing?: boolean
-}
-
 interface Todos {
   todos: Todo[] // An array of Todo objects
 }
@@ -63,7 +56,7 @@ const activeClass = (completed: boolean | undefined, editing: boolean | undefine
   return cl.join(' ')
 }
 
-const TodoItem: React.FC<TodoProps> = ({ id, text, completed, editing }) => (
+const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
   <li key={id} className={activeClass(completed, editing)}>
     <div className="view">
       <input className="toggle" type="checkbox" />
