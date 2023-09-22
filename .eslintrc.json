@@ -15,5 +15,6 @@
         "react"
     ],
     "rules": {
+        "indent": ["error", 2] // Use 2 spaces for indentation
     }
 }
