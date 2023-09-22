@@ -1,6 +1,6 @@
 {
   "name": "htmx-todomvc",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "htmx todomvc app with ts, express and jsx",
   "main": "src/app.tsx",
   "scripts": {
@@ -14,7 +14,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/syarul/htmx-todomvc/issues"
   },

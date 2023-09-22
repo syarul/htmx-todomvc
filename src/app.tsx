@@ -1,9 +1,9 @@
 // src/app.tsx
 import React from 'react';
-import express, { Request, Response, NextFunction  } from 'express';
+import express, { Request as ExpressRequest, Response, NextFunction  } from 'express';
 const { renderToString } = require('react-dom/server');
 
-interface ExpressRequest extends Request {
+interface Request extends ExpressRequest {
     query: {
       text: string;
     };
@@ -16,7 +16,7 @@ declare module 'react' {
     }
 }
 
-function processResponse(req: ExpressRequest, res: Response, next: NextFunction) {
+function processResponse(req: Request, res: Response, next: NextFunction) {
     const originalSend: (body?: any) => Response = res.send.bind(res); 
     res.send = function (data: any): Response {
         if (typeof data === 'string') {
@@ -47,17 +47,17 @@ const MainTemplate = (
             <section className="todoapp">
                 <header className="header">
                     <h1>todos</h1>
-                        <input 
-                            id="new-todo"
-                            name="text" 
-                            className="new-todo"
-                            placeholder="What needs to be done?"
-                            hx-get="/new-todo"
-                            hx-trigger="keyup[keyCode==13], text"
-                            hx-target=".todo-list"
-                            hx-swap="beforeend"
-                            _="on htmx:afterRequest set my value to ''"
-                            autoFocus />
+                    <input 
+                        id="new-todo"
+                        name="text" 
+                        className="new-todo"
+                        placeholder="What needs to be done?"
+                        hx-get="/new-todo"
+                        hx-trigger="keyup[keyCode==13], text"
+                        hx-target=".todo-list"
+                        hx-swap="beforeend"
+                        _="on htmx:afterRequest set my value to ''"
+                        autoFocus />
                 </header>
                 <section className="main">
                     <input id="toggle-all" className="toggle-all" type="checkbox" />
@@ -90,37 +90,23 @@ const MainTemplate = (
     </html>
 )
 
-app.get('/', (req: Request, res: Response) => {
-  res.send(MainTemplate);
-});
+app.get('/', (req: Request, res: Response) => res.send(MainTemplate));
 
-app.get('/learn.json', (req: Request, res: Response) => {
-    res.send('{}');
-  });
+app.get('/learn.json', (req: Request, res: Response) => res.send('{}'));
 
-app.get('/new-todo', (req: ExpressRequest, res: Response) => {
+app.get('/new-todo', (req: Request, res: Response) => {
     // in a proper way this should always get sanitize
     const { text } = req.query
     res.send(
-        <li className="">
+        <li>
             <div className="view">
-                <input
-                    className="toggle"
-                    type="checkbox"
-                />
-                <label >
-                   {text}
-                </label>
+                <input className="toggle" type="checkbox" />
+                <label>{text}</label>
                 <button className="destroy" />
             </div>
-            <input
-                ref="editField"
-                className="edit"
-            />
+            <input className="edit" />
         </li>
     )
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+app.listen(port, () => console.log(`Server is running on port ${port}`));
