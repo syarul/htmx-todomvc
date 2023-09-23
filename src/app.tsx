@@ -1,33 +1,9 @@
 import React from 'react'
 import crypto from 'crypto'
-import express, { type Request as ExpressRequest, type Response, type NextFunction } from 'express'
-import { renderToString } from 'react-dom/server'
+import express, { type Response } from 'express'
+import { processResponse } from './middleware'
+import { type Request, type Todo, type Todos } from './types'
 import classNames from 'classnames'
-
-interface Request extends ExpressRequest {
-  query: {
-    text: string
-    id: string
-  }
-}
-
-declare module 'react' {
-  interface HTMLAttributes<T> extends DOMAttributes<T> {
-    // extends React's HTMLAttributes
-    _?: string
-  }
-}
-
-function processResponse (req: Request, res: Response, next: NextFunction): void {
-  const originalSend: (body?: any) => Response = res.send.bind(res)
-  res.send = function (data: any): Response {
-    if (typeof data === 'string') {
-      return originalSend(data)
-    }
-    return originalSend(renderToString(data))
-  }
-  next()
-}
 
 const app = express()
 
@@ -37,18 +13,9 @@ app.use(processResponse)
 
 const port = process.env.PORT ?? 3000
 
-interface Todo {
-  id: string
-  text?: string
-  completed?: boolean
-  editing?: boolean
-}
-
-interface Todos {
-  todos: Todo[] // An array of Todo objects
-}
-
-let todos: Todo[] = [] // An empty array of Todo objects
+// An empty array of Todo objects and just a simple in memory store
+// feel free to change if you want this to be from database instead
+let todos: Todo[] = []
 
 const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
   <input
@@ -132,7 +99,7 @@ const MainTemplate: React.FC<Todos> = ({ todos }) => (
       </footer>
       <script src="static/todomvc-common/base.js" />
       <script src="static/htmx.org/dist/htmx.js" />
-      <script src="static/hyperscript.org/dist/_hyperscript.min.js" />
+      <script src="static/hyperscript.org/dist/_hyperscript.js" />
     </body>
   </html>
 )
