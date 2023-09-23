@@ -1,12 +1,13 @@
-/* eslint-disable react/no-unknown-property */
 import React from 'react'
 import crypto from 'crypto'
 import express, { type Request as ExpressRequest, type Response, type NextFunction } from 'express'
 import { renderToString } from 'react-dom/server'
+import classNames from 'classnames'
 
 interface Request extends ExpressRequest {
   query: {
     text: string
+    id: string
   }
 }
 
@@ -38,7 +39,7 @@ const port = process.env.PORT ?? 3000
 
 interface Todo {
   id: string
-  text: string
+  text?: string
   completed?: boolean
   editing?: boolean
 }
@@ -47,28 +48,36 @@ interface Todos {
   todos: Todo[] // An array of Todo objects
 }
 
-const todos: Todo[] = [] // An empty array of Todo objects
+let todos: Todo[] = [] // An empty array of Todo objects
 
-const activeClass = (completed: boolean | undefined, editing: boolean | undefined): string => {
-  let cl: string[] = []
-  if (completed ?? false) cl = cl.concat('completed')
-  if (editing ?? false) cl = cl.concat('editing')
-  return cl.join(' ')
-}
+const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
+  <input
+    className="toggle"
+    type="checkbox"
+    defaultChecked={completed}
+    hx-patch={`/toggle-todo?id=${id}`}
+    _={`on click ${completed ? 'remove' : 'add'} .completed ${completed ? 'from' : 'to the'} closest <li/>`}
+    hx-target="this"
+    hx-swap="outerHTML"
+  />
+)
 
 const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
-  <li key={id} className={activeClass(completed, editing)}>
+  <li key={id} className={classNames({ completed, editing })}>
     <div className="view">
-      <input className="toggle" type="checkbox" />
+      <TodoCheck id={id} completed={completed} />
       <label>{text}</label>
-      <button className="destroy" />
+      <button
+        className="destroy"
+        hx-delete={`/remove-todo?id=${id}`}
+        hx-trigger="click"
+        hx-target="closest li"
+        _="on htmx:afterRequest fetch /update-counts then put the result into .todo-count"
+      />
     </div>
     <input className="edit" />
   </li>
 )
-
-// const completed = todos.filter(c => c.completed)
-const uncompleted = (): any => todos.filter(c => !(c.completed ?? false))
 
 const MainTemplate: React.FC<Todos> = ({ todos }) => (
   <html lang="en" data-framework="htmx">
@@ -132,17 +141,37 @@ app.get('/', (req: Request, res: Response) => res.send(<MainTemplate todos={todo
 
 app.get('/learn.json', (req: Request, res: Response) => res.send('{}'))
 
-app.get('/update-counts', (req: Request, res: Response) => res.send(
-  <>
-    <strong>{uncompleted().length}</strong>{` item${uncompleted().length === 1 ? '' : 's'} left`}
-  </>
-))
+app.get('/update-counts', (req: Request, res: Response) => {
+  const uncompleted = todos.filter(c => !c.completed)
+  res.send(<><strong>{uncompleted.length}</strong>{` item${uncompleted.length === 1 ? '' : 's'} left`}</>)
+})
+
+app.patch('/toggle-todo', (req: Request, res: Response) => {
+  // in a proper way this should always get sanitize
+  const { id } = req.query
+  let completed = false
+  todos = todos.map(t => {
+    if (t.id === id) {
+      completed = !t.completed
+      return { ...t, completed }
+    }
+    return t
+  })
+  res.send(<TodoCheck id={id} completed={completed} />)
+})
+
+app.delete('/remove-todo', (req: Request, res: Response) => {
+  // in a proper way this should always get sanitize
+  const { id } = req.query
+  todos = todos.filter(t => t.id !== id)
+  res.send('')
+})
 
 app.get('/new-todo', (req: Request, res: Response) => {
   // in a proper way this should always get sanitize
   const { text } = req.query
   const id = crypto.randomUUID()
-  const todo = { id, text, completed: false }
+  const todo = { id, text, completed: false, editing: false }
   todos.push(todo)
   res.send(
     <TodoItem {...todo}/>
