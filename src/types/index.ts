@@ -4,6 +4,7 @@ declare module 'react' {
   interface HTMLAttributes<T> extends DOMAttributes<T> {
     // extends React's HTMLAttributes
     _?: string
+    after?: string
   }
 }
 
@@ -22,5 +23,16 @@ export interface Todo {
 }
 
 export interface Todos {
-  todos: Todo[] // An array of Todo objects
+  todos: Todo[]
+  filters: filter[]
+}
+
+export interface filter {
+  url: string
+  name: string
+  selected: boolean
+}
+
+export interface Filter {
+  filters: filter[]
 }
