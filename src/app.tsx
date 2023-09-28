@@ -6,11 +6,11 @@ import { MainTemplate, TodoFilter, TodoItem, TodoList } from './components'
 import fs from 'fs'
 // An empty array of Todo objects and just a simple in memory store
 // feel free to change if you want this to be from database instead
-if (!fs.existsSync('./temp')) {
-  fs.mkdirSync('./temp')
-  fs.writeFileSync('./temp/todos.json', JSON.stringify([]))
+if (!fs.existsSync('./tmp')) {
+  fs.mkdirSync('./tmp')
+  fs.writeFileSync('./tmp/todos.json', JSON.stringify([]))
 }
-const todoData = fs.readFileSync('./temp/todos.json', 'utf-8')
+const todoData = fs.readFileSync('./tmp/todos.json', 'utf-8')
 let todos: Todo[] = JSON.parse(todoData)
 
 let urls: filter[] = [
@@ -48,13 +48,13 @@ export default (router: Router): void => {
       }
       return t
     })
-    fs.writeFileSync('./temp/todos.json', JSON.stringify(todos))
+    fs.writeFileSync('./tmp/todos.json', JSON.stringify(todos))
     res.send(<TodoItem {...todo}/>)
   })
 
   router.delete('/remove-todo', (req: Request, res: Response) => {
     todos = todos.filter(t => t.id !== req.query.id)
-    fs.writeFileSync('./temp/todos.json', JSON.stringify(todos))
+    fs.writeFileSync('./tmp/todos.json', JSON.stringify(todos))
     res.send('')
   })
 
@@ -63,7 +63,7 @@ export default (router: Router): void => {
     const { text } = req.query
     const todo = { id: crypto.randomUUID(), text, completed: false, editing: false }
     todos.push(todo)
-    fs.writeFileSync('./temp/todos.json', JSON.stringify(todos))
+    fs.writeFileSync('./tmp/todos.json', JSON.stringify(todos))
     res.send(<TodoItem {...todo}/>)
   })
 
