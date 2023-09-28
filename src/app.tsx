@@ -1,4 +1,5 @@
 import React from 'react'
+import crypto from 'crypto'
 import { type Router, type Response } from 'express'
 import { type Request, type Todo, type filter } from './types'
 import { MainTemplate, TodoFilter, TodoItem, TodoList } from './components'
@@ -12,21 +13,6 @@ let urls: filter[] = [
   { url: '#/active', name: 'active', selected: false },
   { url: '#/completed', name: 'completed', selected: false }
 ]
-
-const uuid = () => {
-  /* jshint bitwise:false */
-  let i, random
-  let uuid = ''
-  for (i = 0; i < 32; i++) {
-    random = Math.random() * 16 | 0
-    if (i === 8 || i === 12 || i === 16 || i === 20) {
-      uuid += '-'
-    }
-    uuid += (i === 12 ? 4 : (i === 16 ? (random & 3 | 8) : random))
-      .toString(16)
-  }
-  return uuid
-}
 
 export default (router: Router): void => {
   router.get('/', (req: Request, res: Response) => res.send(<MainTemplate todos={todos} filters={urls} />))
@@ -68,7 +54,7 @@ export default (router: Router): void => {
   router.get('/new-todo', (req: Request, res: Response) => {
   // In a proper manner, this should always be sanitized
     const { text } = req.query
-    const todo = { id: uuid(), text, completed: false, editing: false }
+    const todo = { id: crypto.randomUUID(), text, completed: false, editing: false }
     todos.push(todo)
     res.send(<TodoItem {...todo}/>)
   })

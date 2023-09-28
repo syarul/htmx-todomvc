@@ -26,7 +26,7 @@
     "classnames": "^2.3.2",
     "express": "^4.18.2",
     "express-async-errors": "^3.1.1",
-    "netlify-lambda": "^2.0.16",
+    "netlify-lambda": "^1.6.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "serverless-http": "^3.2.0"
