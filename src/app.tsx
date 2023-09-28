@@ -31,15 +31,23 @@ const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
     hx-patch={`/toggle-todo?id=${id}`}
     _={`
       on click ${completed ? 'remove' : 'add'} .completed ${completed ? 'from' : 'to the'} closest <li/>
-      on htmx:afterRequest fetch /update-counts then put the result into .todo-count
-    `}
+    `} // need fix
     hx-target="this"
     hx-swap="outerHTML"
   />
 )
 
 const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
-  <li key={id} className={classNames({ completed, editing })}>
+  <li
+    key={id}
+    className={classNames({ completed, editing })}
+    x-bind:style={`
+      show === 'all' ||
+      (show === 'active' && !$el.classList.contains('completed')) ||
+      (show === 'completed' && $el.classList.contains('completed'))
+      ? 'display:block;' : 'display:none;'
+    `} // bind display base on alpine data 'show' state and this class 'completed'
+  >
     <div className="view">
       <TodoCheck id={id} completed={completed} />
       <label>{text}</label>
@@ -48,7 +56,6 @@ const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
         hx-delete={`/remove-todo?id=${id}`}
         hx-trigger="click"
         hx-target="closest li"
-        _="on htmx:afterRequest fetch /update-counts then put the result into .todo-count"
       />
     </div>
     <input className="edit" />
@@ -64,23 +71,14 @@ const TodoFilter: React.FC<Filter> = ({ filters }) => (
           hx-trigger="click"
           hx-target=".filters"
           hx-swap="outerHTML"
-          _="on click fetch /todo-list then put the result into .todo-list"
+          x-on:click={`show = '${name}'`}
         >{`${name.charAt(0).toUpperCase()}${name.slice(1)}`}</a>
       </li>
     ))}
   </ul>
 )
 
-const TodoList: React.FC<Todos> = ({ todos, filters }) => todos.filter(t => {
-  const todoFilter = filters.find(f => f.selected) ?? { name: 'all' }
-  if (todoFilter.name === 'active') {
-    return !t.completed
-  }
-  if (todoFilter.name === 'completed') {
-    return t.completed
-  }
-  return true
-}).map(TodoItem)
+const TodoList: React.FC<Todos> = ({ todos }) => todos.map(TodoItem)
 
 const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
   <html lang="en" data-framework="htmx">
@@ -93,7 +91,19 @@ const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
     <body>
       <section
         className="todoapp"
-        _="on load fetch /update-counts then put the result into .todo-count"
+        _='on load fetch /update-counts then put the result into .todo-count' // on load update todo count
+        hx-get='/get-hash' // send hash to the server and render .filters base on hash location on load
+        hx-vals='js:{hash: window.location.hash}'
+        hx-trigger="load"
+        hx-target=".filters"
+        hx-swap="outerHTML"
+        x-data={`{
+          show: {
+            '#/completed': 'completed',
+            '#/active': 'active',
+            '#/': 'all'
+          }[window.location.hash] || 'all'
+        }`} // set initial alpine data state 'show' default to location hash
       >
         <header className="header">
           <h1>todos</h1>
@@ -136,11 +146,18 @@ const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
       <script src="static/todomvc-common/base.js" />
       <script src="static/htmx.org/dist/htmx.js" />
       <script src="static/hyperscript.org/dist/_hyperscript.js" />
+      <script src="static/alpinejs/dist/cdn.js" />
     </body>
   </html>
 )
 
 app.get('/', (req: Request, res: Response) => res.send(<MainTemplate todos={todos} filters={urls} />))
+
+app.get('/get-hash', (req: Request, res: Response) => {
+  const name = req.query.hash.slice(2).length ? req.query.hash.slice(2) : 'all'
+  urls = urls.map(f => ({ ...f, selected: f.name === name }))
+  res.send(<TodoFilter filters={urls} />)
+})
 
 app.get('/learn.json', (req: Request, res: Response) => res.send('{}'))
 

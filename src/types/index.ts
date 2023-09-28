@@ -12,6 +12,7 @@ export interface Request extends ExpressRequest {
   query: {
     text: string
     id: string
+    hash: string
   }
 }
 
