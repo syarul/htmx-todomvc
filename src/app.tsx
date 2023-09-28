@@ -11,8 +11,6 @@ app.use('/static', express.static('node_modules'))
 
 app.use(processResponse)
 
-const port = process.env.PORT ?? 3000
-
 // An empty array of Todo objects and just a simple in memory store
 // feel free to change if you want this to be from database instead
 let todos: Todo[] = []
@@ -203,4 +201,4 @@ app.get('/todo-filter', (req: Request, res: Response) => {
 
 app.get('/todo-list', (req: Request, res: Response) => res.send(<TodoList todos={todos} filters={urls} />))
 
-app.listen(port, () => { console.log(`Server is running on port ${port}`) })
+export default app
