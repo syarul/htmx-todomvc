@@ -70,7 +70,7 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
     <body>
       <section
         className="todoapp"
-        _={`on load fetch ${lambdaPath}/update-counts then put the result into .todo-count`} // on load update todo count
+        // _={`on load fetch ${lambdaPath}/update-counts then put the result into .todo-count`} // on load update todo count
         hx-get={`${lambdaPath}/get-hash`} // send hash to the server and render .filters base on hash location on load
         hx-vals="js:{hash: window.location.hash}"
         hx-trigger="load"
