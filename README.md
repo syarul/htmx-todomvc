@@ -19,7 +19,7 @@ partially in progress
 
 Base on number of lines codes [https://github.com/tastejs/todomvc/tree/master/examples/react](https://github.com/tastejs/todomvc/tree/master/examples/react) on each files
 
-185 + 62 + 108 + 87 + 50 = 492 lines (includes some comments lines)
+185 + 62 + 108 + 87 + 50 + 32 (html) = 524 lines (include some comments lines)
 
 Where as this Hypermedia solutions with HTMX + Hyperscript + Alpine + JSX (not including missing features yet)
 
