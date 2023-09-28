@@ -29,11 +29,11 @@ const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
     type="checkbox"
     defaultChecked={completed}
     hx-patch={`/toggle-todo?id=${id}`}
-    _={`
-      on click ${completed ? 'remove' : 'add'} .completed ${completed ? 'from' : 'to the'} closest <li/>
-    `} // need fix
-    hx-target="this"
+    hx-target="closest <li/>"
     hx-swap="outerHTML"
+    _={`
+      on htmx:afterRequest fetch /update-counts then put the result into .todo-count
+    `}
   />
 )
 
@@ -91,9 +91,9 @@ const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
     <body>
       <section
         className="todoapp"
-        _='on load fetch /update-counts then put the result into .todo-count' // on load update todo count
-        hx-get='/get-hash' // send hash to the server and render .filters base on hash location on load
-        hx-vals='js:{hash: window.location.hash}'
+        _="on load fetch /update-counts then put the result into .todo-count" // on load update todo count
+        hx-get="/get-hash" // send hash to the server and render .filters base on hash location on load
+        hx-vals="js:{hash: window.location.hash}"
         hx-trigger="load"
         hx-target=".filters"
         hx-swap="outerHTML"
@@ -154,7 +154,8 @@ const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
 app.get('/', (req: Request, res: Response) => res.send(<MainTemplate todos={todos} filters={urls} />))
 
 app.get('/get-hash', (req: Request, res: Response) => {
-  const name = req.query.hash.slice(2).length ? req.query.hash.slice(2) : 'all'
+  const hash = req.query.hash || 'all'
+  const name = hash.slice(2).length ? hash.slice(2) : 'all'
   urls = urls.map(f => ({ ...f, selected: f.name === name }))
   res.send(<TodoFilter filters={urls} />)
 })
@@ -169,14 +170,16 @@ app.get('/update-counts', (req: Request, res: Response) => {
 app.patch('/toggle-todo', (req: Request, res: Response) => {
   const { id } = req.query
   let completed = false
+  let todo: Todo = { id }
   todos = todos.map(t => {
     if (t.id === id) {
       completed = !t.completed
-      return { ...t, completed }
+      todo = { ...t, completed }
+      return todo
     }
     return t
   })
-  res.send(<TodoCheck id={id} completed={completed} />)
+  res.send(<TodoItem {...todo}/>)
 })
 
 app.delete('/remove-todo', (req: Request, res: Response) => {
@@ -185,14 +188,12 @@ app.delete('/remove-todo', (req: Request, res: Response) => {
 })
 
 app.get('/new-todo', (req: Request, res: Response) => {
-  // in a proper way this should always get sanitize
+  // In a proper manner, this should always be sanitized
   const { text } = req.query
   const id = crypto.randomUUID()
   const todo = { id, text, completed: false, editing: false }
   todos.push(todo)
-  res.send(
-    <TodoItem {...todo}/>
-  )
+  res.send(<TodoItem {...todo}/>)
 })
 
 app.get('/todo-filter', (req: Request, res: Response) => {
