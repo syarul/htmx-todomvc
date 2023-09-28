@@ -8,10 +8,21 @@ partially in progress
 - ~~clear input todo after adding new todo~~
 - ~~filter todo base on hash location~~
 - ~~check todo behaving correctly~~
-- ~~check todo behaving accroding to location hash~~
+- ~~check todo behaving according to location hash~~
 - ~~update todo count base on completion~~
 - ~~delete todo~~
 - edit todo
 - check all todos
 - clear completed todos
+
+### How does this compare to the a full client MVC react?
+
+Base on number of lines codes [https://github.com/tastejs/todomvc/tree/master/examples/react](https://github.com/tastejs/todomvc/tree/master/examples/react) on each files
+
+185 + 62 + 108 + 87 + 50 = 492 lines (includes some comments lines)
+
+Where as this Hypermedia solutions with HTMX + Hyperscript + Alpine + JSX (not including missing features yet)
+
+39 (types) + 14 (middleware) + 206 (app) = 259
+
 
