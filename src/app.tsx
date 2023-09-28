@@ -6,10 +6,9 @@ import { MainTemplate, TodoFilter, TodoItem, TodoList } from './components'
 import fs from 'fs'
 // An empty array of Todo objects and just a simple in memory store
 // feel free to change if you want this to be from database instead
-// if (!fs.existsSync('./tmp')) {
-// fs.mkdirSync('./tmp')
-// fs.writeFileSync('./tmp/todos.json', JSON.stringify([]))
-// }
+if (!fs.existsSync('./tmp/todos.json')) {
+  fs.writeFileSync('./tmp/todos.json', JSON.stringify([]))
+}
 const todoData = fs.readFileSync('./tmp/todos.json', 'utf-8')
 let todos: Todo[] = JSON.parse(todoData)
 
