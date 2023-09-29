@@ -24,9 +24,10 @@ const modelOptions = {
     methods: {
       async todos () {
         const mKeys = await redis.smembers(memberKey)
-        return await Promise.all(mKeys.map(async id => {
+        const res = await Promise.all(mKeys.map(async id => {
           return await redis.hgetall(`${redisKey}:${id}`)
         }))
+        return res.sort((a, b) => parseInt(a.id) - parseInt(b.id))
       }
     }
   }
