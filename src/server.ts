@@ -1,6 +1,5 @@
 import express from 'express'
 import serverless from 'serverless-http'
-import bodyParser from 'body-parser'
 import todoApp from './app'
 import path from 'path'
 import { processResponse } from './middleware'
@@ -9,7 +8,6 @@ const app = express()
 
 const router = express.Router()
 app.use(processResponse)
-app.use(bodyParser.json())
 
 todoApp(router)
 

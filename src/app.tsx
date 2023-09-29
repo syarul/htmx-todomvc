@@ -1,16 +1,36 @@
 import React from 'react'
-import crypto from 'crypto'
 import { type Router, type Response } from 'express'
 import { type Request, type Todo, type filter } from './types'
 import { MainTemplate, TodoFilter, TodoItem, TodoList } from './components'
-import fs from 'fs'
-// An empty array of Todo objects and just a simple in memory store
-// feel free to change if you want this to be from database instead
-// if (!fs.existsSync('./tmp/todos.json')) {
-// fs.writeFileSync('./tmp/todos.json', JSON.stringify([]))
-// }
-const todoData = fs.readFileSync('./tmp/todos.json', 'utf-8')
-let todos: Todo[] = JSON.parse(todoData)
+import Redis from 'ioredis'
+import * as dotenv from 'dotenv'
+dotenv.config()
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const rqRedis = require('rq-redis')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const rq = require('requrse')
+
+const redis = new Redis(`rediss://default:${process.env.REDIS_KEY}@willing-cowbird-38871.upstash.io:38871`)
+
+const redisKey = 'todos'
+const memberKey = 'todo_ids'
+
+const modelOptions = {
+  rq,
+  redis,
+  redisKey,
+  memberKey,
+  options: {
+    methods: {
+      async todos () {
+        const mKeys = await redis.smembers(memberKey)
+        return await Promise.all(mKeys.map(async id => {
+          return await redis.hgetall(`${redisKey}:${id}`)
+        }))
+      }
+    }
+  }
+}
 
 let urls: filter[] = [
   { url: '#/', name: 'all', selected: true },
@@ -19,7 +39,15 @@ let urls: filter[] = [
 ]
 
 export default (router: Router): void => {
-  router.get('/', (req: Request, res: Response) => res.send(<MainTemplate todos={todos} filters={urls} />))
+  router.get('/', (req: Request, res: Response) => {
+    rqRedis({
+      data: {
+        todos: '*'
+      }
+    }, modelOptions).then(({ data: { todos } }: { data: { todos: Todo[] } }) =>
+      res.send(<MainTemplate todos={todos} filters={urls} />)
+    )
+  })
 
   router.get('/get-hash', (req: Request, res: Response) => {
     const hash = req.query.hash || 'all'
@@ -31,39 +59,67 @@ export default (router: Router): void => {
   router.get('/learn.json', (req: Request, res: Response) => res.send('{}'))
 
   router.get('/update-counts', (req: Request, res: Response) => {
-    const uncompleted = todos.filter(c => !c.completed)
-    res.send(<><strong>{uncompleted.length}</strong>{` item${uncompleted.length === 1 ? '' : 's'} left`}</>)
+    rqRedis({
+      data: {
+        todos: '*'
+      }
+    }, modelOptions).then(({ data: { todos } }: { data: { todos: Todo[] } }) => {
+      const uncompleted = todos.filter(c => c.completed === '')
+      res.send(<><strong>{uncompleted.length}</strong>{` item${uncompleted.length === 1 ? '' : 's'} left`}</>)
+    })
   })
 
   router.patch('/toggle-todo', (req: Request, res: Response) => {
-    const { id } = req.query
-    let completed = false
-    let todo: Todo = { id }
-    todos = todos.map(t => {
-      if (t.id === id) {
-        completed = !t.completed
-        todo = { ...t, completed }
-        return todo
+    const { id, completed } = req.query
+    rqRedis({
+      todo: {
+        update: {
+          $params: {
+            id,
+            data: {
+              completed
+            }
+          },
+          id: 1,
+          text: 1,
+          completed: 1,
+          editing: 1
+        }
       }
-      return t
-    })
-    fs.writeFileSync('./tmp/todos.json', JSON.stringify(todos))
-    res.send(<TodoItem {...todo}/>)
+    }, modelOptions).then(({ todo: { update } }: { todo: { update: Todo } }) => res.send(<TodoItem {...update}/>))
   })
 
   router.delete('/remove-todo', (req: Request, res: Response) => {
-    todos = todos.filter(t => t.id !== req.query.id)
-    fs.writeFileSync('./tmp/todos.json', JSON.stringify(todos))
-    res.send('')
+    rqRedis({
+      todo: {
+        remove: {
+          $params: { id: req.query.id },
+          id: 1
+        }
+      }
+    }, modelOptions).then(() => res.send(''))
   })
 
   router.get('/new-todo', (req: Request, res: Response) => {
   // In a proper manner, this should always be sanitized
     const { text } = req.query
-    const todo = { id: crypto.randomUUID(), text, completed: false, editing: false }
-    todos.push(todo)
-    fs.writeFileSync('./tmp/todos.json', JSON.stringify(todos))
-    res.send(<TodoItem {...todo}/>)
+    rqRedis({
+      data: {
+        getMemberKeys: '*'
+      }
+    }, modelOptions).then(({ data: { getMemberKeys: { keys } } }: { data: { getMemberKeys: { keys: any[] } } }) => {
+      const todo = { id: `${keys.length++}`, text, completed: '', editing: '' }
+      rqRedis({
+        todo: {
+          create: {
+            $params: {
+              data: todo,
+              id: 1 // this will be used as secondary key
+            }
+          }
+        }
+      }, modelOptions).then(() => res.send(<TodoItem {...todo}/>))
+    })
   })
 
   router.get('/todo-filter', (req: Request, res: Response) => {
@@ -71,5 +127,13 @@ export default (router: Router): void => {
     res.send(<TodoFilter filters={urls} />)
   })
 
-  router.get('/todo-list', (req: Request, res: Response) => res.send(<TodoList todos={todos} filters={urls} />))
+  router.get('/todo-list', (req: Request, res: Response) => {
+    rqRedis({
+      data: {
+        todos: '*'
+      }
+    }, modelOptions).then(({ data: { todos } }: { data: { todos: Todo[] } }) =>
+      res.send(<TodoList todos={todos} filters={urls} />)
+    )
+  })
 }

@@ -7,8 +7,8 @@ export const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
   <input
     className="toggle"
     type="checkbox"
-    defaultChecked={completed}
-    hx-patch={`${lambdaPath}/toggle-todo?id=${id}`}
+    defaultChecked={completed === 'completed'}
+    hx-patch={`${lambdaPath}/toggle-todo?id=${id}&completed=${completed === 'completed' ? '' : 'completed'}`}
     hx-target="closest <li/>"
     hx-swap="outerHTML"
     _={`on htmx:afterRequest fetch ${lambdaPath}/update-counts then put the result into .todo-count`}
@@ -18,7 +18,7 @@ export const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
 export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
   <li
     key={id}
-    className={classNames({ completed, editing })}
+    className={classNames({ completed: completed === 'completed', editing: editing === 'editing' })}
     x-bind:style={`
         show === 'all' ||
         (show === 'active' && !$el.classList.contains('completed')) ||
