@@ -14,7 +14,7 @@ app.use(bodyParser.json())
 todoApp(router)
 
 let activePath = ''
-if (process.env.NODE_ENV !== 'dev') {
+if (process.env.NODE_ENV === 'prod') {
   activePath = '/.netlify/functions/server'
 }
 
@@ -22,7 +22,7 @@ app.use(activePath, router) // path must route to lambda
 app.use('/learn.json', (req, res) => { res.sendFile('{}') })
 app.use('/', (req, res) => { res.sendFile(path.join(__dirname, '../index.html')) })
 
-if (process.env.NODE_ENV === 'dev') {
+if (process.env.NODE_ENV !== 'prod') {
   const port = process.env.PORT ?? 3000
   app.listen(port, () => { console.log(`Server is running on port ${port}`) })
 }

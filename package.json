@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "cross-env NODE_ENV=dev ts-node src/server.ts",
-    "dev": "cross-env NODE_ENV=dev nodemon --watch src --exec ts-node src/server.ts",
+    "dev": "nodemon --watch src --exec ts-node src/server.ts",
     "build": "tsc",
     "lambda:build": "npm run build && cross-env NODE_OPTIONS=--openssl-legacy-provider netlify-lambda build dist",
     "lambda:serve": "netlify-lambda serve dist"

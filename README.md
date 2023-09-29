@@ -3,6 +3,9 @@ htmx todomvc app with ts, express and jsx
 
 partially in progress
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/a381d940-be89-4d4a-b36d-8152fd5eac10/deploy-status)](https://app.netlify.com/sites/htmx-todomvc/deploys)
+> relatively slow since its free [https://netlify--htmx-todomvc.netlify.app/.netlify/functions/server](https://netlify--htmx-todomvc.netlify.app/.netlify/functions/server)
+
 ### What's already in place
 - ~~add todo~~
 - ~~clear input todo after adding new todo~~

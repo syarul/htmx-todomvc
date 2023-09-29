@@ -3,14 +3,8 @@ import crypto from 'crypto'
 import { type Router, type Response } from 'express'
 import { type Request, type Todo, type filter } from './types'
 import { MainTemplate, TodoFilter, TodoItem, TodoList } from './components'
-import fs from 'fs'
-// An empty array of Todo objects and just a simple in memory store
-// feel free to change if you want this to be from database instead
-// if (!fs.existsSync('./tmp/todos.json')) {
-// fs.writeFileSync('./tmp/todos.json', JSON.stringify([]))
-// }
-const todoData = fs.readFileSync('./tmp/todos.json', 'utf-8')
-let todos: Todo[] = JSON.parse(todoData)
+
+let todos: Todo[] = []
 
 let urls: filter[] = [
   { url: '#/', name: 'all', selected: true },
@@ -47,13 +41,11 @@ export default (router: Router): void => {
       }
       return t
     })
-    fs.writeFileSync('./tmp/todos.json', JSON.stringify(todos))
     res.send(<TodoItem {...todo}/>)
   })
 
   router.delete('/remove-todo', (req: Request, res: Response) => {
     todos = todos.filter(t => t.id !== req.query.id)
-    fs.writeFileSync('./tmp/todos.json', JSON.stringify(todos))
     res.send('')
   })
 
@@ -62,7 +54,6 @@ export default (router: Router): void => {
     const { text } = req.query
     const todo = { id: crypto.randomUUID(), text, completed: false, editing: false }
     todos.push(todo)
-    fs.writeFileSync('./tmp/todos.json', JSON.stringify(todos))
     res.send(<TodoItem {...todo}/>)
   })
 
