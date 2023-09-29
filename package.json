@@ -4,11 +4,11 @@
   "description": "htmx todomvc app with ts, express and jsx",
   "main": "dist/server.js",
   "scripts": {
-    "start": "cross-env NODE_ENV=dev ts-node src/server.ts",
-    "dev": "cross-env NODE_ENV=dev nodemon --watch src --exec ts-node src/server.ts",
+    "start": "ts-node src/server.ts",
+    "dev": "nodemon --watch src --exec ts-node src/server.ts",
     "build": "tsc",
-    "lambda:build": "npm run build && cross-env NODE_OPTIONS=--openssl-legacy-provider netlify-lambda build dist",
-    "lambda:serve": "netlify-lambda serve dist"
+    "lambda:build": "npm run build && cross-env NODE_ENV=prod NODE_OPTIONS=--openssl-legacy-provider netlify-lambda build dist",
+    "lambda:serve": "cross-env NODE_ENV=prod netlify-lambda serve dist"
   },
   "repository": {
     "type": "git",
