@@ -81,8 +81,40 @@ export default (router: Router): void => {
           },
           id: 1,
           text: 1,
-          completed: 1,
-          editing: 1
+          completed: 1
+        }
+      }
+    }, modelOptions).then(({ todo: { update } }: { todo: { update: Todo } }) => res.send(<TodoItem {...update}/>))
+  })
+
+  router.patch('/edit-todo', (req: Request, res: Response) => {
+    const { id, editing } = req.query
+    rqRedis({
+      todo: {
+        get: {
+          $params: {
+            id
+          },
+          id: 1,
+          text: 1,
+          completed: 1
+        }
+      }
+    }, modelOptions).then(({ todo: { get } }: { todo: { get: Todo } }) => res.send(<TodoItem {...get} editing={editing}/>))
+  })
+
+  router.get('/update-todo', (req: Request, res: Response) => {
+    const { id, text, key } = req.query
+    rqRedis({
+      todo: {
+        update: {
+          $params: {
+            id,
+            ...(key === '13' ? { data: { text } } : { data: {} }) // on enter update, ignore when other key is press
+          },
+          id: 1,
+          text: 1,
+          completed: 1
         }
       }
     }, modelOptions).then(({ todo: { update } }: { todo: { update: Todo } }) => res.send(<TodoItem {...update}/>))

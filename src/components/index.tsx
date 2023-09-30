@@ -28,7 +28,11 @@ export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
   >
     <div className="view">
       <TodoCheck id={id} completed={completed} />
-      <label>{text}</label>
+      <label
+        hx-trigger="dblclick"
+        hx-patch={`${lambdaPath}/edit-todo?id=${id}&editing=editing`}
+        hx-target="closest li"
+      >{text}</label>
       <button
         className="destroy"
         hx-delete={`${lambdaPath}/remove-todo?id=${id}`}
@@ -37,7 +41,16 @@ export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
         _={`on htmx:afterRequest fetch ${lambdaPath}/update-counts then put the result into .todo-count`}
       />
     </div>
-    <input className="edit" />
+    <input
+      className="edit"
+      name="text"
+      value={editing === 'editing' ? text : ''}
+      hx-trigger="keyup[keyCode==13], keyup[keyCode==27], text"
+      hx-vals="js:{key: event.keyCode}"
+      hx-get={`${lambdaPath}/update-todo?id=${id}`}
+      hx-target="closest li"
+      hx-swap="outerHTML"
+      autoFocus/>
   </li>
 )
 

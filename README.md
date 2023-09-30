@@ -14,7 +14,7 @@ partially in progress
 - ~~check todo behaving according to location hash~~
 - ~~update todo count base on completion~~
 - ~~delete todo~~
-- edit todo
+- ~~edit todo~~(not perfect)
 - check all todos
 - clear completed todos
 
