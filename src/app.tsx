@@ -89,6 +89,10 @@ export default (router: Router): void => {
 
   router.patch('/edit-todo', (req: Request, res: Response) => {
     const { id, editing } = req.query
+    // the trick is to only target the input element,
+    // since there's bunch _hyperscript scope events happening here
+    // we don't want to swap and loose the selectors.
+    // Could also move it to the parentNode
     rqRedis({
       todo: {
         get: {
@@ -105,10 +109,6 @@ export default (router: Router): void => {
   router.get('/update-todo', (req: Request, res: Response) => {
     // In a proper manner, this should always be sanitized
     const { id, text, key } = req.query
-    // the trick is to only target the input element,
-    // since there's bunch _hyperscript scope events happening here
-    // we don't want to swap and loose the selectors.
-    // Could also move it to the parentNode
     rqRedis({
       todo: {
         update: {
