@@ -177,4 +177,24 @@ export default (router: Router): void => {
       res.send(<TodoList todos={todos} filters={urls} />)
     )
   })
+
+  router.get('/toggle-all', (req: Request, res: Response) => {
+    rqRedis({
+      data: {
+        todos: '*'
+      }
+    }, modelOptions).then(({ data: { todos } }: { data: { todos: Todo[] } }) =>
+      res.send(`${todos.filter(t => t.completed === '').length === 0 && todos.length !== 0}`)
+    )
+  })
+
+  router.get('/completed', (req: Request, res: Response) => {
+    rqRedis({
+      data: {
+        todos: '*'
+      }
+    }, modelOptions).then(({ data: { todos } }: { data: { todos: Todo[] } }) =>
+      res.send(todos.filter(t => t.completed === 'completed').map(t => t.id).toString())
+    )
+  })
 }

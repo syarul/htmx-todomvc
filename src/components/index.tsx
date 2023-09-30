@@ -11,7 +11,19 @@ export const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
     hx-patch={`${lambdaPath}/toggle-todo?id=${id}&completed=${completed === 'completed' ? '' : 'completed'}`}
     hx-target="closest <li/>"
     hx-swap="outerHTML"
-    _={`on htmx:afterRequest fetch ${lambdaPath}/update-counts then put the result into .todo-count`}
+    _={`
+      on htmx:afterRequest debounced at 10ms fetch ${lambdaPath}/update-counts then put the result into .todo-count
+      on htmx:afterRequest debounced at 10ms fetch ${lambdaPath}/completed then set $completed to it
+      on htmx:afterRequest debounced at 100ms send completed to <button.clear-completed/>
+      on htmx:afterRequest debounced at 10ms fetch ${lambdaPath}/toggle-all then set $toggleAll to it
+      on htmx:afterRequest debounced at 100ms js
+        if ($toggleAll === 'false') {
+          $toggle.checked = false
+        }
+        if ($toggleAll === 'true') {
+          $toggle.checked = true
+        }
+    `}
   />
 )
 
@@ -19,7 +31,7 @@ export const EditTodo: React.FC<Todo> = ({ id, text, editing }) => (
   <input
     className="edit"
     name="text"
-    value={editing === 'editing' ? text : ''}
+    defaultValue={editing === 'editing' ? text : ''}
     hx-trigger="keyup[keyCode==13], keyup[keyCode==27], text" // capture Enter, ESC and text input
     hx-vals="js:{key: event.keyCode}" // send event keyCode to server as well
     hx-get={`${lambdaPath}/update-todo?id=${id}`}
@@ -31,7 +43,7 @@ export const EditTodo: React.FC<Todo> = ({ id, text, editing }) => (
 export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
   <li
     key={id}
-    className={classNames({ completed: completed === 'completed', editing: editing === 'editing' })}
+    className={classNames('todo', { completed: completed === 'completed', editing: editing === 'editing' })}
     x-bind:style={`
         show === 'all' ||
         (show === 'active' && !$el.classList.contains('completed')) ||
@@ -48,7 +60,7 @@ export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
         hx-swap="outerHTML"
         _={`
           on dblclick add .editing to the closest <li/>
-          on htmx:afterRequest wait 100ms
+          on htmx:afterRequest wait 50ms
           set $el to me.parentNode.nextSibling
           js $el.selectionStart = $el.selectionEnd = $el.value.length
         `} // 1) add class editing 2) place cursor on the end of the text line in the input
@@ -58,7 +70,21 @@ export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
         hx-delete={`${lambdaPath}/remove-todo?id=${id}`}
         hx-trigger="click"
         hx-target="closest li"
-        _={`on htmx:afterRequest fetch ${lambdaPath}/update-counts then put the result into .todo-count`}
+        _={`
+          on htmx:afterRequest fetch ${lambdaPath}/update-counts then put the result into .todo-count
+          on htmx:afterRequest 
+            if $todo.hasChildNodes() set $footer.style.display to 'block'
+            else set $footer.style.display to 'none'
+            end
+          on htmx:afterRequest fetch ${lambdaPath}/toggle-all then set $toggleAll to it
+          on htmx:afterRequest wait 100ms js
+            if ($toggleAll === 'false') {
+              $toggle.checked = false
+            }
+            if ($toggleAll === 'true') {
+              $toggle.checked = true
+            }
+        `}
       />
     </div>
     <EditTodo id={id} text={text} editing={editing}/>
@@ -121,23 +147,69 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
             _={`
                 on htmx:afterRequest set my value to ''
                 on htmx:afterRequest fetch ${lambdaPath}/update-counts then put the result into .todo-count
+                on htmx:afterRequest if $todo.hasChildNodes() set $footer.style.display to 'block' end
+                on htmx:afterRequest fetch ${lambdaPath}/toggle-all then set $toggleAll to it
+                on htmx:afterRequest wait 100ms js
+                  if ($toggleAll === 'false') {
+                    $toggle.checked = false
+                  }
+                  if ($toggleAll === 'true') {
+                    $toggle.checked = true
+                  }
               `}
             autoFocus />
         </header>
         <section className="main">
-          <input id="toggle-all" className="toggle-all" type="checkbox" />
+          <input id="toggle-all" className="toggle-all" type="checkbox"
+            defaultChecked={todos.filter(t => t.completed === '').length === 0 && todos.length !== 0}
+            _={`
+              on load set $toggle to me
+              on click js
+                const els = document.querySelectorAll('.toggle')
+                els.forEach(e => {
+                  if ($toggle.checked && !e.checked){
+                    e.click()
+                  } 
+                  if (!$toggle.checked && e.checked){
+                    e.click()
+                  }
+                })
+            `}
+          />
           <label htmlFor="toggle-all">Mark all as complete</label>
-          <ul className="todo-list">
+          <ul
+            className="todo-list"
+            _={`
+              on load debounced at 10ms set $todo to me
+              on load debounced at 10ms if me.hasChildNodes() set $footer.style.display to 'block'
+            `}
+          >
             <TodoList todos={todos} filters={filters} />
           </ul>
         </section>
-        <footer className="footer">
+        <footer className="footer" _="on load set $footer to me" style={{ display: 'none' }}>
           <span
             className="todo-count"
             hx-trigger="load"
             _={`on load fetch ${lambdaPath}/update-counts then put the result into .todo-count`}
           />
           <TodoFilter filters={filters} />
+          <button className="clear-completed"
+            _={`
+              on load fetch ${lambdaPath}/completed then set $completed to it
+                if $completed === '' set my.style.display to 'none'
+                else set my.style.display to 'block'
+                end
+              on completed
+                if $completed === '' set my.style.display to 'none'
+                else set my.style.display to 'block'
+                end
+              on click js
+                document.querySelectorAll('li.completed').forEach(el => {
+                  el.querySelector('button.destroy').click()
+                })
+            `}
+          >Clear Complete</button>
         </footer>
       </section>
       <footer className="info">
