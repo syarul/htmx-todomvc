@@ -6,9 +6,9 @@ import Redis from 'ioredis'
 import * as dotenv from 'dotenv'
 dotenv.config()
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const rqRedis = require('rq-redis')
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const rq = require('requrse')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const rqRedis = require('rq-redis')
 
 const redis = new Redis(`rediss://default:${process.env.REDIS_KEY}@willing-cowbird-38871.upstash.io:38871`)
 
@@ -23,11 +23,9 @@ const modelOptions = {
   options: {
     methods: {
       async todos () {
-        const mKeys = await redis.smembers(memberKey)
-        const res = await Promise.all(mKeys.map(async id => {
+        return await Promise.all((await redis.smembers(memberKey)).sort().map(async id => {
           return await redis.hgetall(`${redisKey}:${id}`)
         }))
-        return res.sort((a, b) => parseInt(a.id) - parseInt(b.id))
       }
     }
   }
@@ -109,7 +107,11 @@ export default (router: Router): void => {
         getMemberKeys: '*'
       }
     }, modelOptions).then(({ data: { getMemberKeys: { keys } } }: { data: { getMemberKeys: { keys: any[] } } }) => {
-      const todo = { id: `${keys.length++}`, text, completed: '', editing: '' }
+      let id = '0'
+      if (keys.length) {
+        id = `${parseInt(keys.pop()) + 1}`
+      }
+      const todo = { id, text, completed: '', editing: '' }
       rqRedis({
         todo: {
           create: {

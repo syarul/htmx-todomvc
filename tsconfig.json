@@ -8,9 +8,10 @@
       "esModuleInterop": true,
       "jsx": "react",
       "skipLibCheck": true,
-      "forceConsistentCasingInFileNames": true
+      "forceConsistentCasingInFileNames": true,
+      "allowSyntheticDefaultImports": true,
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "index.d.ts"],
     "exclude": ["node_modules"]
   }
   
