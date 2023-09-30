@@ -15,6 +15,19 @@ export const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
   />
 )
 
+export const EditTodo: React.FC<Todo> = ({ id, text, editing }) => (
+  <input
+    className="edit"
+    name="text"
+    value={editing === 'editing' ? text : ''}
+    hx-trigger="keyup[keyCode==13], keyup[keyCode==27], text" // capture Enter, ESC and text input
+    hx-vals="js:{key: event.keyCode}" // send event keyCode to server as well
+    hx-get={`${lambdaPath}/update-todo?id=${id}`}
+    hx-target="closest li"
+    hx-swap="outerHTML"
+    autoFocus/>
+)
+
 export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
   <li
     key={id}
@@ -31,7 +44,14 @@ export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
       <label
         hx-trigger="dblclick"
         hx-patch={`${lambdaPath}/edit-todo?id=${id}&editing=editing`}
-        hx-target="closest li"
+        hx-target="next input"
+        hx-swap="outerHTML"
+        _={`
+          on dblclick add .editing to the closest <li/>
+          on htmx:afterRequest wait 100ms
+          set $el to me.parentNode.nextSibling
+          js $el.selectionStart = $el.selectionEnd = $el.value.length
+        `} // 1) add class editing 2) place cursor on the end of the text line in the input
       >{text}</label>
       <button
         className="destroy"
@@ -41,16 +61,7 @@ export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
         _={`on htmx:afterRequest fetch ${lambdaPath}/update-counts then put the result into .todo-count`}
       />
     </div>
-    <input
-      className="edit"
-      name="text"
-      value={editing === 'editing' ? text : ''}
-      hx-trigger="keyup[keyCode==13], keyup[keyCode==27], text"
-      hx-vals="js:{key: event.keyCode}"
-      hx-get={`${lambdaPath}/update-todo?id=${id}`}
-      hx-target="closest li"
-      hx-swap="outerHTML"
-      autoFocus/>
+    <EditTodo id={id} text={text} editing={editing}/>
   </li>
 )
 
@@ -83,7 +94,6 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
     <body>
       <section
         className="todoapp"
-        // _={`on load fetch ${lambdaPath}/update-counts then put the result into .todo-count`} // on load update todo count
         hx-get={`${lambdaPath}/get-hash`} // send hash to the server and render .filters base on hash location on load
         hx-vals="js:{hash: window.location.hash}"
         hx-trigger="load"

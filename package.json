@@ -1,7 +1,7 @@
 {
   "name": "htmx-todomvc",
   "version": "0.0.1",
-  "description": "htmx todomvc app with ts, express and jsx",
+  "description": "HTMX TodoMVC app with TS, Express and JSX with 0% Javascript on Front-End",
   "main": "dist/server.js",
   "scripts": {
     "start": "ts-node src/server.ts",

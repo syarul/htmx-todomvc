@@ -1,7 +1,7 @@
 import React from 'react'
 import { type Router, type Response } from 'express'
 import { type Request, type Todo, type filter } from './types'
-import { MainTemplate, TodoFilter, TodoItem, TodoList } from './components'
+import { EditTodo, MainTemplate, TodoFilter, TodoItem, TodoList } from './components'
 import Redis from 'ioredis'
 import * as dotenv from 'dotenv'
 dotenv.config()
@@ -96,21 +96,25 @@ export default (router: Router): void => {
             id
           },
           id: 1,
-          text: 1,
-          completed: 1
+          text: 1
         }
       }
-    }, modelOptions).then(({ todo: { get } }: { todo: { get: Todo } }) => res.send(<TodoItem {...get} editing={editing}/>))
+    }, modelOptions).then(({ todo: { get } }: { todo: { get: Todo } }) => res.send(<EditTodo {...get} editing={editing}/>))
   })
 
   router.get('/update-todo', (req: Request, res: Response) => {
+    // In a proper manner, this should always be sanitized
     const { id, text, key } = req.query
+    // the trick is to only target the input element,
+    // since there's bunch _hyperscript scope events happening here
+    // we don't want to swap and loose the selectors.
+    // Could also move it to the parentNode
     rqRedis({
       todo: {
         update: {
           $params: {
             id,
-            ...(key === '13' ? { data: { text } } : { data: {} }) // on enter update, ignore when other key is press
+            ...(key === '13' ? { data: { text } } : { data: {} }) // on enter update, ignore the rest
           },
           id: 1,
           text: 1,
@@ -132,7 +136,7 @@ export default (router: Router): void => {
   })
 
   router.get('/new-todo', (req: Request, res: Response) => {
-  // In a proper manner, this should always be sanitized
+    // In a proper manner, this should always be sanitized
     const { text } = req.query
     rqRedis({
       data: {
@@ -140,10 +144,12 @@ export default (router: Router): void => {
       }
     }, modelOptions).then(({ data: { getMemberKeys: { keys } } }: { data: { getMemberKeys: { keys: any[] } } }) => {
       let id = '0'
+      keys.sort((a: any, b: any) => a - b) // need sorted, redis may send unsorted memberKeys
       if (keys.length) {
         id = `${parseInt(keys.pop()) + 1}`
       }
-      const todo = { id, text, completed: '', editing: '' }
+      // ignore editing since its a pure client state handler that has nothing to do with the data
+      const todo = { id, text, completed: '' }
       rqRedis({
         todo: {
           create: {

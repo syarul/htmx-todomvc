@@ -1,5 +1,5 @@
 # htmx-todomvc
-htmx todomvc app with ts, express and jsx
+HTMX TodoMVC app with TS, Express and JSX with 0% Javascript on Front-End
 
 partially in progress
 
@@ -14,7 +14,7 @@ partially in progress
 - ~~check todo behaving according to location hash~~
 - ~~update todo count base on completion~~
 - ~~delete todo~~
-- ~~edit todo~~(not perfect)
+- ~~edit todo~~
 - check all todos
 - clear completed todos
 
