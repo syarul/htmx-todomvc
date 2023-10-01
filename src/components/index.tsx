@@ -1,7 +1,7 @@
 import React from 'react'
 import { type Todo, type Todos, type Filter, type filter } from '../types'
 import classNames from 'classnames'
-import { lambdaPath } from '../server'
+import { lambdaPath } from '../api/index'
 
 export const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
   <input

@@ -1,6 +1,6 @@
 import express from 'express'
-import todoApp from './app'
-import { cache, processResponse } from './middleware'
+import todoApp from '../app'
+import { cache, processResponse } from '../middleware'
 
 const app = express()
 
@@ -23,3 +23,4 @@ export {
   app,
   lambdaPath
 }
+module.exports = app
