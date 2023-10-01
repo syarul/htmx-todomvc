@@ -6,7 +6,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=dev ts-node src/api/index.ts",
     "dev": "nodemon --watch src --ext ts,tsx,d.ts --exec ts-node src/api/index.ts",
-    "build": "tsc"
+    "build": "cross-env NODE_ENV=prod tsc"
   },
   "repository": {
     "type": "git",

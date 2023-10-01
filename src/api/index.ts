@@ -16,7 +16,10 @@ if (process.env.NODE_ENV !== 'prod') {
   app.listen(port, () => { console.log(`Server is running on port ${port}`) })
 }
 
-const lambdaPath = ''
+let lambdaPath = ''
+if (process.env.NODE_ENV === 'prod') {
+  lambdaPath = '/api'
+}
 
 export default app
 export {
