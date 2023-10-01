@@ -1,7 +1,5 @@
 # htmx-todomvc
-htmx todomvc app with ts, express and jsx
-
-partially in progress
+HTMX TodoMVC app with TS, Express and JSX
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/a381d940-be89-4d4a-b36d-8152fd5eac10/deploy-status)](https://app.netlify.com/sites/htmx-todomvc/deploys)
 > relatively slow since its free [https://netlify--htmx-todomvc.netlify.app/.netlify/functions/server](https://netlify--htmx-todomvc.netlify.app/.netlify/functions/server)
@@ -14,9 +12,10 @@ partially in progress
 - ~~check todo behaving according to location hash~~
 - ~~update todo count base on completion~~
 - ~~delete todo~~
-- edit todo
-- check all todos
-- clear completed todos
+- ~~edit todo~~
+- ~~check all todos~~
+- ~~clear completed todos~~
+- ~~toggle label toggle all~~
 
 ### How does this compare to the full client MVC react?
 

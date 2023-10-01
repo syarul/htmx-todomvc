@@ -52,7 +52,7 @@ export default (router: Router): void => {
   router.get('/new-todo', (req: Request, res: Response) => {
   // In a proper manner, this should always be sanitized
     const { text } = req.query
-    const todo = { id: crypto.randomUUID(), text, completed: false, editing: false }
+    const todo = { id: crypto.randomUUID(), text, completed: false }
     todos.push(todo)
     res.send(<TodoItem {...todo}/>)
   })
@@ -63,4 +63,12 @@ export default (router: Router): void => {
   })
 
   router.get('/todo-list', (req: Request, res: Response) => res.send(<TodoList todos={todos} filters={urls} />))
+  // this can be migrated to FE
+  router.get('/toggle-all', (req: Request, res: Response) => {
+    res.send(`${todos.filter(t => !t.completed).length === 0 && todos.length !== 0}`)
+  })
+  // this can be migrated to FE
+  router.get('/completed', (req: Request, res: Response) => {
+    res.send(todos.filter(t => t.completed).length ? 'block' : 'none')
+  })
 }
