@@ -12,18 +12,11 @@ export const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
     hx-target="closest <li/>"
     hx-swap="outerHTML"
     _={`
-      on htmx:afterRequest debounced at 10ms fetch ${lambdaPath}/update-counts then put the result into .todo-count
-      on htmx:afterRequest debounced at 10ms fetch ${lambdaPath}/completed then set $completed to it
-      on htmx:afterRequest debounced at 100ms send completed to <button.clear-completed/>
-      on htmx:afterRequest debounced at 10ms fetch ${lambdaPath}/toggle-all then set $toggleAll to it
-      on htmx:afterRequest debounced at 100ms js
-        if ($toggleAll === 'false') {
-          $toggle.checked = false
-        }
-        if ($toggleAll === 'true') {
-          $toggle.checked = true
-        }
-    `}
+      on htmx:afterRequest
+        send toggleDisplayClearCompleted to <button.clear-completed/>
+        send todoCount to <span.todo-count/>
+        send toggleAll to <input.toggle-all/>
+    `} // debounced since this may repeatedly triggered
   />
 )
 
@@ -71,19 +64,12 @@ export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
         hx-trigger="click"
         hx-target="closest li"
         _={`
-          on htmx:afterRequest fetch ${lambdaPath}/update-counts then put the result into .todo-count
           on htmx:afterRequest 
-            if $todo.hasChildNodes() set $footer.style.display to 'block'
-            else set $footer.style.display to 'none'
-            end
-          on htmx:afterRequest fetch ${lambdaPath}/toggle-all then set $toggleAll to it
-          on htmx:afterRequest wait 100ms js
-            if ($toggleAll === 'false') {
-              $toggle.checked = false
-            }
-            if ($toggleAll === 'true') {
-              $toggle.checked = true
-            }
+            send toggleDisplayClearCompleted to <button.clear-completed/>
+            send todoCount to <span.todo-count/>
+            send toggleAll to <input.toggle-all/>
+            send footerToggleDisplay to <footer.footer/>
+            send labelToggleAll to <label/>
         `}
       />
     </div>
@@ -145,17 +131,12 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
             hx-target=".todo-list"
             hx-swap="beforeend"
             _={`
-                on htmx:afterRequest set my value to ''
-                on htmx:afterRequest fetch ${lambdaPath}/update-counts then put the result into .todo-count
-                on htmx:afterRequest if $todo.hasChildNodes() set $footer.style.display to 'block' end
-                on htmx:afterRequest fetch ${lambdaPath}/toggle-all then set $toggleAll to it
-                on htmx:afterRequest wait 100ms js
-                  if ($toggleAll === 'false') {
-                    $toggle.checked = false
-                  }
-                  if ($toggleAll === 'true') {
-                    $toggle.checked = true
-                  }
+                on htmx:afterRequest
+                  set my value to ''
+                  send todoCount to <span.todo-count/>
+                  send toggleAll to <input.toggle-all/>
+                  send footerToggleDisplay to <footer.footer/>
+                  send labelToggleAll to <label/>
               `}
             autoFocus />
         </header>
@@ -163,47 +144,67 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
           <input id="toggle-all" className="toggle-all" type="checkbox"
             defaultChecked={todos.filter(t => t.completed === '').length === 0 && todos.length !== 0}
             _={`
-              on load set $toggle to me
+              on load set $toggleAll to me
+              on toggleAll debounced at 100ms
+                fetch ${lambdaPath}/toggle-all then
+                if it === 'true' and my.checked === false then
+                  set my.checked to true
+                else
+                  if my.checked === true and it === 'false' then set my.checked to false
+                end
+              end
               on click js
                 const els = document.querySelectorAll('.toggle')
                 els.forEach(e => {
-                  if ($toggle.checked && !e.checked){
+                  if ($toggleAll.checked && !e.checked){
                     e.click()
                   } 
-                  if (!$toggle.checked && e.checked){
+                  if (!$toggleAll.checked && e.checked){
                     e.click()
                   }
                 })
             `}
           />
-          <label htmlFor="toggle-all">Mark all as complete</label>
+          <label htmlFor="toggle-all"
+            _={`
+             on load send labelToggleAll to me
+             on labelToggleAll debounced at 100ms
+               if $todo.hasChildNodes() set my.style.display to 'flex'
+               else set my.style.display to 'none'
+           `}
+            style={{ display: 'none' }}>Mark all as complete</label>
           <ul
             className="todo-list"
             _={`
               on load debounced at 10ms set $todo to me
-              on load debounced at 10ms if me.hasChildNodes() set $footer.style.display to 'block'
+              on load send footerToggleDisplay to <footer.footer/>
             `}
           >
             <TodoList todos={todos} filters={filters} />
           </ul>
         </section>
-        <footer className="footer" _="on load set $footer to me" style={{ display: 'none' }}>
+        <footer className="footer" _={`
+          on load send footerToggleDisplay to me
+          on footerToggleDisplay debounced at 100ms
+            if $todo.hasChildNodes() set my.style.display to 'block'
+            else set my.style.display to 'none'
+        `} style={{ display: 'none' }}>
           <span
             className="todo-count"
             hx-trigger="load"
-            _={`on load fetch ${lambdaPath}/update-counts then put the result into .todo-count`}
+            _={`
+              on load send todoCount to me
+              on todoCount debounced at 100ms
+                fetch ${lambdaPath}/update-counts then put the result into me
+            `}
           />
           <TodoFilter filters={filters} />
           <button className="clear-completed"
             _={`
-              on load fetch ${lambdaPath}/completed then set $completed to it
-                if $completed === '' set my.style.display to 'none'
-                else set my.style.display to 'block'
-                end
-              on completed
-                if $completed === '' set my.style.display to 'none'
-                else set my.style.display to 'block'
-                end
+              on load send toggleDisplayClearCompleted to me
+              on toggleDisplayClearCompleted debounced at 100ms
+                fetch ${lambdaPath}/completed then
+                set my.style.display to it
               on click js
                 document.querySelectorAll('li.completed').forEach(el => {
                   el.querySelector('button.destroy').click()
@@ -212,7 +213,7 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
           >Clear Complete</button>
         </footer>
       </section>
-      <footer className="info">
+      <footer className="info" _="on load debounced at 100ms call startMeUp()">
         <p>Double-click to edit a todo</p>
         <p>Created by <a href="http://github.com/syarul/">syarul</a></p>
         <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
@@ -221,6 +222,13 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
       <script src="https://unpkg.com/htmx.org@1.9.6" />
       <script src="https://unpkg.com/hyperscript.org/dist/_hyperscript.js" />
       <script src="https://unpkg.com/alpinejs/dist/cdn.js" />
+      <script type="text/hyperscript">
+        {`
+          def startMeUp()
+            log \`this is TodoMVC app build with HTMX!\`
+          end
+        `}
+      </script>
     </body>
   </html>
 )

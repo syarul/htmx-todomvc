@@ -15,6 +15,7 @@ HTMX TodoMVC app with TS, Express and JSX
 - ~~edit todo~~
 - ~~check all todos~~
 - ~~clear completed todos~~
+- ~~toggle label toggle all~~
 
 ### How does this compare to the full client MVC react?
 

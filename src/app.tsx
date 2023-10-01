@@ -177,7 +177,7 @@ export default (router: Router): void => {
       res.send(<TodoList todos={todos} filters={urls} />)
     )
   })
-
+  // this can be migrated to FE
   router.get('/toggle-all', (req: Request, res: Response) => {
     rqRedis({
       data: {
@@ -187,14 +187,14 @@ export default (router: Router): void => {
       res.send(`${todos.filter(t => t.completed === '').length === 0 && todos.length !== 0}`)
     )
   })
-
+  // this can be migrated to FE
   router.get('/completed', (req: Request, res: Response) => {
     rqRedis({
       data: {
         todos: '*'
       }
     }, modelOptions).then(({ data: { todos } }: { data: { todos: Todo[] } }) =>
-      res.send(todos.filter(t => t.completed === 'completed').map(t => t.id).toString())
+      res.send(todos.filter(t => t.completed === 'completed').length ? 'block' : 'none')
     )
   })
 }
