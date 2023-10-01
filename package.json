@@ -2,7 +2,7 @@
   "name": "htmx-todomvc",
   "version": "0.0.1",
   "description": "htmx todomvc app with ts, express and jsx",
-  "main": "dist/api/index.js",
+  "main": "api/index.js",
   "scripts": {
     "start": "cross-env NODE_ENV=dev ts-node src/api/index.ts",
     "dev": "nodemon --watch src --ext ts,tsx,d.ts --exec ts-node src/api/index.ts",
