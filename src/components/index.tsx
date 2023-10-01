@@ -11,6 +11,13 @@ export const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
     hx-patch={`${lambdaPath}/toggle-todo?id=${id}&completed=${completed}`}
     hx-target="closest <li/>"
     hx-swap="outerHTML"
+    _={`
+      on toggle
+        if $toggleAll.checked and my.checked === false
+          my.click()
+        else if $toggleAll.checked === false and my.checked
+          my.click()
+    `}
   />
 )
 
@@ -24,6 +31,7 @@ export const EditTodo: React.FC<Todo> = ({ id, text, editing }) => (
     hx-get={`${lambdaPath}/update-todo?id=${id}`}
     hx-target="closest li"
     hx-swap="outerHTML"
+    _="on htmx:afterRequest send focus to <input.new-todo/>"
     autoFocus/>
 )
 
@@ -32,11 +40,12 @@ export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
     key={id}
     className={classNames('todo', { completed, editing })}
     x-bind:style={`
-        show === 'all' ||
-        (show === 'active' && !$el.classList.contains('completed')) ||
-        (show === 'completed' && $el.classList.contains('completed'))
-        ? 'display:block;' : 'display:none;'
-      `} // bind display base on alpine data 'show' state and this class 'completed'
+      show === 'all' ||
+      (show === 'active' && !$el.classList.contains('completed')) ||
+      (show === 'completed' && $el.classList.contains('completed'))
+      ? 'display:block;' : 'display:none;'
+    `}
+    _="on destroy my.querySelector('button').click()"
   >
     <div className="view">
       <TodoCheck id={id} completed={completed} />
@@ -64,6 +73,7 @@ export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
             send toggleAll to <input.toggle-all/>
             send footerToggleDisplay to <footer.footer/>
             send labelToggleAll to <label/>
+            send focus to <input.new-todo/>
         `}
       />
     </div>
@@ -124,7 +134,10 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
             hx-trigger="keyup[keyCode==13], text"
             hx-target=".todo-list"
             hx-swap="beforeend"
-            _="on htmx:afterRequest set my value to ''"
+            _={`
+              on htmx:afterRequest set my value to ''
+              on focus my.focus()
+            `}
             autoFocus />
         </header>
         <section className="main">
@@ -140,16 +153,7 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
                   if my.checked === true and it === 'false' then set my.checked to false
                 end
               end
-              on click js
-                const els = document.querySelectorAll('.toggle')
-                els.forEach(e => {
-                  if ($toggleAll.checked && !e.checked){
-                    e.click()
-                  } 
-                  if (!$toggleAll.checked && e.checked){
-                    e.click()
-                  }
-                })
+              on click send toggle to <input.toggle/>
             `}
           />
           <label htmlFor="toggle-all"
@@ -181,6 +185,7 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
           on footerToggleDisplay debounced at 100ms
             if $todo.hasChildNodes() set my.style.display to 'block'
             else set my.style.display to 'none'
+            send focus to <input.new-todo/>
         `} style={{ display: 'none' }}>
           <span
             className="todo-count"
@@ -198,10 +203,8 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
               on toggleDisplayClearCompleted debounced at 100ms
                 fetch ${lambdaPath}/completed then
                 set my.style.display to it
-              on click js
-                document.querySelectorAll('li.completed').forEach(el => {
-                  el.querySelector('button.destroy').click()
-                })
+              end
+              on click send destroy to <li.completed/>
             `}
           >Clear Complete</button>
         </footer>
