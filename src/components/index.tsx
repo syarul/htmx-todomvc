@@ -11,12 +11,6 @@ export const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
     hx-patch={`${lambdaPath}/toggle-todo?id=${id}&completed=${completed}`}
     hx-target="closest <li/>"
     hx-swap="outerHTML"
-    _={`
-      on htmx:afterRequest
-        send toggleDisplayClearCompleted to <button.clear-completed/>
-        send todoCount to <span.todo-count/>
-        send toggleAll to <input.toggle-all/>
-    `} // debounced since this may repeatedly triggered
   />
 )
 
@@ -54,8 +48,8 @@ export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
         _={`
           on dblclick add .editing to the closest <li/>
           on htmx:afterRequest wait 50ms
-          set $el to me.parentNode.nextSibling
-          js $el.selectionStart = $el.selectionEnd = $el.value.length
+            set $el to my.parentNode.nextSibling
+            set $el.selectionStart to $el.value.length
         `} // 1) add class editing 2) place cursor on the end of the text line in the input
       >{text}</label>
       <button
@@ -130,14 +124,7 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
             hx-trigger="keyup[keyCode==13], text"
             hx-target=".todo-list"
             hx-swap="beforeend"
-            _={`
-                on htmx:afterRequest
-                  set my value to ''
-                  send todoCount to <span.todo-count/>
-                  send toggleAll to <input.toggle-all/>
-                  send footerToggleDisplay to <footer.footer/>
-                  send labelToggleAll to <label/>
-              `}
+            _="on htmx:afterRequest set my value to ''"
             autoFocus />
         </header>
         <section className="main">
@@ -177,7 +164,13 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
             className="todo-list"
             _={`
               on load debounced at 10ms set $todo to me
-              on load send footerToggleDisplay to <footer.footer/>
+              on load debounced at 10ms
+                send toggleDisplayClearCompleted to <button.clear-completed/>
+                send footerToggleDisplay to <footer.footer/>
+                send todoCount to <span.todo-count/>
+                send toggleAll to <input.toggle-all/>
+                send footerToggleDisplay to <footer.footer/>
+                send labelToggleAll to <label/>
             `}
           >
             <TodoList todos={todos} filters={filters} />

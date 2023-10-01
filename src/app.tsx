@@ -2,7 +2,7 @@ import React from 'react'
 import crypto from 'crypto'
 import { type Router, type Response } from 'express'
 import { type Request, type Todo, type filter } from './types'
-import { MainTemplate, TodoFilter, TodoItem, TodoList } from './components'
+import { EditTodo, MainTemplate, TodoFilter, TodoItem, TodoList } from './components'
 
 let todos: Todo[] = []
 
@@ -42,6 +42,30 @@ export default (router: Router): void => {
       return t
     })
     res.send(<TodoItem {...todo}/>)
+  })
+
+  router.patch('/edit-todo', (req: Request, res: Response) => {
+    const { id, editing } = req.query
+    // the trick is to only target the input element,
+    // since there's bunch _hyperscript scope events happening here
+    // we don't want to swap and loose the selectors.
+    // Could also move it to the parentNode
+    const todo = todos.find(t => t.id === id) ?? req.query
+    res.send(<EditTodo {...todo} editing={editing === 'editing'}/>)
+  })
+
+  router.get('/update-todo', (req: Request, res: Response) => {
+    // In a proper manner, this should always be sanitized
+    const { id, text, key } = req.query
+    let todo: Todo = { id }
+    todos = todos.map(t => {
+      if (t.id === id) {
+        todo = { ...t, text: key === '13' ? text : t.text }
+        return todo
+      }
+      return t
+    })
+    res.send(<TodoItem {...todo} />)
   })
 
   router.delete('/remove-todo', (req: Request, res: Response) => {

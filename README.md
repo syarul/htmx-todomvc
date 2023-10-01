@@ -25,10 +25,7 @@ Base on number of lines codes [https://github.com/tastejs/todomvc/tree/master/ex
 
 Where as this Hypermedia solutions with HTMX + Hyperscript + Alpine + JSX (not including missing features yet)
 
-39 (types) + 14 (middleware) + 206 (app) = 259
-
-Bundled:
-2 (types) + 15 (middleware) + 128 (app) = 145
+41 (types) + 226(components) + 14 (middleware) + 97 (app) + 32(server) = 410
 
 
 
