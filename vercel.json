@@ -1,9 +1,4 @@
 {
-    "builds": [
-        {
-            "use": "@vercel/node"
-        }
-    ],
     "rewrites": [
         {
             "source": "/dist/api/(.*)",
