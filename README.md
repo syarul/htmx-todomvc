@@ -1,8 +1,10 @@
 # htmx-todomvc
+![image](https://htmx.org/img/createdwith.jpeg)
+
 HTMX TodoMVC app with TS, Express and JSX
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/a381d940-be89-4d4a-b36d-8152fd5eac10/deploy-status)](https://app.netlify.com/sites/htmx-todomvc/deploys)
-> relatively slow since its free [https://netlify--htmx-todomvc.netlify.app/.netlify/functions/server](https://netlify--htmx-todomvc.netlify.app/.netlify/functions/server)
+[https://htmx-todomvc.vercel.app/](https://htmx-todomvc.vercel.app/) 
+> poor caching need moved to db
 
 ### What's already in place
 - ~~add todo~~
