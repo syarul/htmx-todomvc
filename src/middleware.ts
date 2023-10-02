@@ -13,7 +13,7 @@ export function processResponse (req: Request, res: Response, next: NextFunction
   next()
 }
 
-export function cache (req: Request, res: Response, next: NextFunction): void {
+export function cacheControl (req: Request, res: Response, next: NextFunction): void {
   res.setHeader('Content-Type', 'text/html')
   res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate')
   next()

@@ -14,7 +14,6 @@ export interface Request extends ExpressRequest {
     id: string
     hash: string
     editing: string
-    key: string
   }
 }
 

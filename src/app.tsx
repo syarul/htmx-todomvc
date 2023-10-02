@@ -16,9 +16,8 @@ export default (router: Router): void => {
   router.get('/', (req: Request, res: Response) => res.send(<MainTemplate todos={todos} filters={urls} />))
 
   router.get('/get-hash', (req: Request, res: Response) => {
-    const hash = req.query.hash || 'all'
-    const name = hash.slice(2).length ? hash.slice(2) : 'all'
-    urls = urls.map(f => ({ ...f, selected: f.name === name }))
+    const hash = req.query.hash.length ? req.query.hash : '/#all'
+    urls = urls.map(f => ({ ...f, selected: f.name === hash.slice(2) }))
     res.send(<TodoFilter filters={urls} />)
   })
 
@@ -44,23 +43,17 @@ export default (router: Router): void => {
     res.send(<TodoItem {...todo}/>)
   })
 
-  router.patch('/edit-todo', (req: Request, res: Response) => {
-    const { id, editing } = req.query
-    // the trick is to only target the input element,
-    // since there's bunch _hyperscript scope events happening here
-    // we don't want to swap and loose the selectors.
-    // Could also move it to the parentNode
-    const todo = todos.find(t => t.id === id) ?? req.query
-    res.send(<EditTodo {...todo} editing={editing === 'editing'}/>)
-  })
+  router.patch('/edit-todo', (req: Request, res: Response) =>
+    res.send(<EditTodo {...req.query} editing={true}/>)
+  )
 
   router.get('/update-todo', (req: Request, res: Response) => {
     // In a proper manner, this should always be sanitized
-    const { id, text, key } = req.query
+    const { id, text } = req.query
     let todo: Todo = { id }
     todos = todos.map(t => {
       if (t.id === id) {
-        todo = { ...t, text: key === '13' ? text : t.text }
+        todo = { ...t, text }
         return todo
       }
       return t

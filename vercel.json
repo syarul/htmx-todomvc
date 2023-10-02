@@ -1,3 +1,13 @@
 {
-    "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }]
+    "builds": [
+        {
+            "use": "@vercel/node"
+        }
+    ],
+    "rewrites": [
+        {
+            "source": "/dist/api/(.*)",
+            "destination": "/api"
+        }
+    ]
 }

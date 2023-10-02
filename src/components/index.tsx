@@ -1,7 +1,7 @@
 import React from 'react'
 import { type Todo, type Todos, type Filter, type filter } from '../types'
 import classNames from 'classnames'
-import { lambdaPath } from '../api'
+import { lambdaPath } from '..'
 
 export const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
   <input
@@ -26,12 +26,14 @@ export const EditTodo: React.FC<Todo> = ({ id, text, editing }) => (
     className="edit"
     name="text"
     defaultValue={editing ? text : ''}
-    hx-trigger="keyup[keyCode==13], keyup[keyCode==27], text" // capture Enter, ESC and text input
-    hx-vals="js:{key: event.keyCode}" // send event keyCode to server as well
+    hx-trigger="keyup[keyCode==13], text" // capture Enter, ESC and text input
     hx-get={`${lambdaPath}/update-todo?id=${id}`}
     hx-target="closest li"
     hx-swap="outerHTML"
-    _="on htmx:afterRequest send focus to <input.new-todo/>"
+    _={`
+      on keyup[keyCode==27] remove .editing from closest <li/>
+      on htmx:afterRequest send focus to <input.new-todo/>
+    `}
     autoFocus/>
 )
 
@@ -39,19 +41,22 @@ export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
   <li
     key={id}
     className={classNames('todo', { completed, editing })}
-    x-bind:style={`
-      show === 'all' ||
-      (show === 'active' && !$el.classList.contains('completed')) ||
-      (show === 'completed' && $el.classList.contains('completed'))
-      ? 'display:block;' : 'display:none;'
+    _={`
+      on destroy my.querySelector('button').click()
+      on show wait 20ms
+        if window.location.hash === '#/active' and my.classList.contains('completed')
+          set my.style.display to 'none'
+        else if window.location.hash === '#/completed' and my.classList.contains('completed') === false
+          set my.style.display to 'none'
+        else
+          set my.style.display to 'block'
     `}
-    _="on destroy my.querySelector('button').click()"
   >
     <div className="view">
       <TodoCheck id={id} completed={completed} />
       <label
         hx-trigger="dblclick"
-        hx-patch={`${lambdaPath}/edit-todo?id=${id}&editing=editing`}
+        hx-patch={`${lambdaPath}/edit-todo?id=${id}&text=${text}`}
         hx-target="next input"
         hx-swap="outerHTML"
         _={`
@@ -90,7 +95,7 @@ export const TodoFilter: React.FC<Filter> = ({ filters }) => (
           hx-trigger="click"
           hx-target=".filters"
           hx-swap="outerHTML"
-          x-on:click={`show = '${name}'`}
+          _="on htmx:afterRequest send show to <li.todo/>"
         >{`${name.charAt(0).toUpperCase()}${name.slice(1)}`}</a>
       </li>
     ))}
@@ -115,13 +120,6 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
         hx-trigger="load"
         hx-target=".filters"
         hx-swap="outerHTML"
-        x-data={`{
-            show: {
-              '#/completed': 'completed',
-              '#/active': 'active',
-              '#/': 'all'
-            }[window.location.hash] || 'all'
-          }`} // set initial alpine data state 'show' default to location hash
       >
         <header className="header">
           <h1>todos</h1>
@@ -175,6 +173,7 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
                 send toggleAll to <input.toggle-all/>
                 send footerToggleDisplay to <footer.footer/>
                 send labelToggleAll to <label/>
+                send show to <li.todo/>
             `}
           >
             <TodoList todos={todos} filters={filters} />
@@ -213,11 +212,11 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
         <p>Double-click to edit a todo</p>
         <p>Created by <a href="http://github.com/syarul/">syarul</a></p>
         <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+        <img src="https://htmx.org/img/createdwith.jpeg" width="250" height="auto" />
       </footer>
       <script src="https://unpkg.com/todomvc-common@1.0.5/base.js" />
       <script src="https://unpkg.com/htmx.org@1.9.6" />
       <script src="https://unpkg.com/hyperscript.org/dist/_hyperscript.js" />
-      <script src="https://unpkg.com/alpinejs/dist/cdn.js" />
       <script type="text/hyperscript">
         {`
           def startMeUp()
