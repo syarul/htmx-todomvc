@@ -11,15 +11,10 @@ todoApp(app)
 
 app.use('/learn.json', (req, res) => { res.sendFile('{}') })
 
-if (process.env.NODE_ENV !== 'prod') {
-  const port = process.env.PORT ?? 3000
-  app.listen(port, () => { console.log(`Server is running on port ${port}`) })
-}
+const port = process.env.PORT ?? 3000
+app.listen(port, () => { console.log(`Server is running on port ${port}`) })
 
-let lambdaPath = ''
-if (process.env.NODE_ENV === 'prod') {
-  lambdaPath = '/api'
-}
+const lambdaPath = ''
 
 export default app
 export {
