@@ -1,7 +1,7 @@
 import React from 'react'
 import { type Todo, type Todos, type Filter, type filter } from '../types'
 import classNames from 'classnames'
-import { lambdaPath } from '../api/index'
+import { lambdaPath } from '../api'
 
 export const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
   <input
@@ -167,8 +167,8 @@ export const MainTemplate: React.FC<Todos> = ({ todos, filters }) => (
           <ul
             className="todo-list"
             _={`
-              on load debounced at 10ms set $todo to me
-              on load debounced at 10ms
+              on load debounced at 10ms 
+                set $todo to me
                 send toggleDisplayClearCompleted to <button.clear-completed/>
                 send footerToggleDisplay to <footer.footer/>
                 send todoCount to <span.todo-count/>
