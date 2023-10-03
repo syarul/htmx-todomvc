@@ -7,7 +7,7 @@ exports.MainTemplate = exports.TodoList = exports.TodoFilter = exports.TodoItem 
 const react_1 = __importDefault(require("react"));
 const classnames_1 = __importDefault(require("classnames"));
 const __1 = require("..");
-const TodoCheck = ({ id, completed }) => (react_1.default.createElement("input", { className: "toggle", type: "checkbox", defaultChecked: completed, "hx-patch": `${__1.lambdaPath}/toggle-todo?id=${id}&completed=${completed}`, "hx-target": "closest <li/>", "hx-swap": "outerHTML", _: `
+const TodoCheck = ({ id, completed }) => (react_1.default.createElement("input", { className: "toggle", type: "checkbox", defaultChecked: completed === 'completed', "hx-patch": `${__1.lambdaPath}/toggle-todo?id=${id}&completed=${completed === 'completed' ? '' : 'completed'}`, "hx-target": "closest <li/>", "hx-swap": "outerHTML", _: `
       on toggle
         if $toggleAll.checked and my.checked === false
           my.click()
@@ -21,7 +21,7 @@ const EditTodo = ({ id, text, editing }) => (react_1.default.createElement("inpu
       on htmx:afterRequest send focus to <input.new-todo/>
     `, autoFocus: true }));
 exports.EditTodo = EditTodo;
-const TodoItem = ({ id, text, completed, editing }) => (react_1.default.createElement("li", { key: id, className: (0, classnames_1.default)('todo', { completed, editing }), _: `
+const TodoItem = ({ id, text, completed }) => (react_1.default.createElement("li", { key: id, className: (0, classnames_1.default)('todo', { completed }), _: `
       on destroy my.querySelector('button').click()
       on show wait 20ms
         if window.location.hash === '#/active' and my.classList.contains('completed')
@@ -48,7 +48,7 @@ const TodoItem = ({ id, text, completed, editing }) => (react_1.default.createEl
             send labelToggleAll to <label/>
             send focus to <input.new-todo/>
         ` })),
-    react_1.default.createElement(exports.EditTodo, { id: id, text: text, editing: editing })));
+    react_1.default.createElement(exports.EditTodo, { id: id, text: text })));
 exports.TodoItem = TodoItem;
 const TodoFilter = ({ filters }) => (react_1.default.createElement("ul", { className: "filters" }, filters.map(({ url, name, selected }) => (react_1.default.createElement("li", { key: name },
     react_1.default.createElement("a", { className: (0, classnames_1.default)({ selected }), href: url, "hx-get": `${__1.lambdaPath}/todo-filter?id=${name}`, "hx-trigger": "click", "hx-target": ".filters", "hx-swap": "outerHTML", _: "on htmx:afterRequest send show to <li.todo/>" }, `${name.charAt(0).toUpperCase()}${name.slice(1)}`))))));

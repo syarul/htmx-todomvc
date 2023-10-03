@@ -13,7 +13,6 @@ exports.app = app;
 app.use(middleware_1.processResponse);
 app.use(middleware_1.cacheControl);
 (0, app_1.default)(app);
-app.use('/learn.json', (req, res) => { res.sendFile('{}'); });
 const port = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 3000;
 app.listen(port, () => { console.log(`Server is running on port ${port}`); });
 const lambdaPath = '';

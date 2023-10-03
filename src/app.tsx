@@ -1,10 +1,37 @@
 import React from 'react'
-import crypto from 'crypto'
 import { type Router, type Response } from 'express'
 import { type Request, type Todo, type filter } from './types'
 import { EditTodo, MainTemplate, TodoFilter, TodoItem, TodoList } from './components'
 
-let todos: Todo[] = []
+import Redis from 'ioredis'
+import * as dotenv from 'dotenv'
+dotenv.config()
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const rq = require('requrse')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const rqRedis = require('rq-redis')
+
+const redis = new Redis(`rediss://default:${process.env.REDIS_KEY}@willing-cowbird-38871.upstash.io:38871`)
+
+const redisKey = `${process.env.REDIS_MKEY}_todos`
+const memberKey = `${process.env.REDIS_MKEY}_todo_ids`
+
+const modelOptions = {
+  rq,
+  redis,
+  redisKey,
+  memberKey,
+  options: {
+    methods: {
+      async todos () {
+        return await Promise.all((await redis.smembers(memberKey)).sort().map(async id => {
+          const res = await redis.hgetall(`${redisKey}:${id}`)
+          return res
+        }))
+      }
+    }
+  }
+}
 
 let urls: filter[] = [
   { url: '#/', name: 'all', selected: true },
@@ -13,7 +40,15 @@ let urls: filter[] = [
 ]
 
 export default (router: Router): void => {
-  router.get('/', (req: Request, res: Response) => res.send(<MainTemplate todos={todos} filters={urls} />))
+  router.get('/', (req: Request, res: Response) =>
+    rqRedis({
+      data: {
+        todos: '*'
+      }
+    }, modelOptions).then(({ data: { todos } }: { data: { todos: Todo[] } }) =>
+      res.send(<MainTemplate todos={todos} filters={urls} />)
+    )
+  )
 
   router.get('/get-hash', (req: Request, res: Response) => {
     const hash = req.query.hash.length ? req.query.hash : '/#all'
@@ -24,23 +59,33 @@ export default (router: Router): void => {
   router.get('/learn.json', (req: Request, res: Response) => res.send('{}'))
 
   router.get('/update-counts', (req: Request, res: Response) => {
-    const uncompleted = todos.filter(c => !c.completed)
-    res.send(<><strong>{uncompleted.length}</strong>{` item${uncompleted.length === 1 ? '' : 's'} left`}</>)
+    rqRedis({
+      data: {
+        todos: '*'
+      }
+    }, modelOptions).then(({ data: { todos } }: { data: { todos: Todo[] } }) => {
+      const uncompleted = todos.filter(c => c.completed === '')
+      res.send(<><strong>{uncompleted.length}</strong>{` item${uncompleted.length === 1 ? '' : 's'} left`}</>)
+    })
   })
 
   router.patch('/toggle-todo', (req: Request, res: Response) => {
-    const { id } = req.query
-    let completed = false
-    let todo: Todo = { id }
-    todos = todos.map(t => {
-      if (t.id === id) {
-        completed = !t.completed
-        todo = { ...t, completed }
-        return todo
+    const { id, completed } = req.query
+    rqRedis({
+      todo: {
+        update: {
+          $params: {
+            id,
+            data: {
+              completed
+            }
+          },
+          id: 1,
+          text: 1,
+          completed: 1
+        }
       }
-      return t
-    })
-    res.send(<TodoItem {...todo}/>)
+    }, modelOptions).then(({ todo: { update } }: { todo: { update: Todo } }) => res.send(<TodoItem {...update}/>))
   })
 
   router.patch('/edit-todo', (req: Request, res: Response) =>
@@ -50,28 +95,58 @@ export default (router: Router): void => {
   router.get('/update-todo', (req: Request, res: Response) => {
     // In a proper manner, this should always be sanitized
     const { id, text } = req.query
-    let todo: Todo = { id }
-    todos = todos.map(t => {
-      if (t.id === id) {
-        todo = { ...t, text }
-        return todo
+    rqRedis({
+      todo: {
+        update: {
+          $params: {
+            id,
+            data: { text }
+          },
+          id: 1,
+          text: 1,
+          completed: 1
+        }
       }
-      return t
-    })
-    res.send(<TodoItem {...todo} />)
+    }, modelOptions).then(({ todo: { update } }: { todo: { update: Todo } }) => res.send(<TodoItem {...update}/>))
   })
 
   router.delete('/remove-todo', (req: Request, res: Response) => {
-    todos = todos.filter(t => t.id !== req.query.id)
-    res.send('')
+    rqRedis({
+      todo: {
+        remove: {
+          $params: { id: req.query.id },
+          id: 1
+        }
+      }
+    }, modelOptions).then(() => res.send(''))
   })
 
   router.get('/new-todo', (req: Request, res: Response) => {
-  // In a proper manner, this should always be sanitized
+    // In a proper manner, this should always be sanitized
     const { text } = req.query
-    const todo = { id: crypto.randomUUID(), text, completed: false }
-    todos.push(todo)
-    res.send(<TodoItem {...todo}/>)
+    rqRedis({
+      data: {
+        getMemberKeys: '*'
+      }
+    }, modelOptions).then(({ data: { getMemberKeys: { keys } } }: { data: { getMemberKeys: { keys: any[] } } }) => {
+      let id = '0'
+      keys.sort((a: any, b: any) => a - b) // need sorted, redis may send unsorted memberKeys
+      if (keys.length) {
+        id = `${parseInt(keys.pop()) + 1}`
+      }
+      // ignore editing since its a pure client state handler that has nothing to do with the data
+      const todo = { id, text, completed: '' }
+      rqRedis({
+        todo: {
+          create: {
+            $params: {
+              data: todo,
+              id: 1 // this will be used as secondary key
+            }
+          }
+        }
+      }, modelOptions).then(() => res.send(<TodoItem {...todo}/>))
+    })
   })
 
   router.get('/todo-filter', (req: Request, res: Response) => {
@@ -79,13 +154,34 @@ export default (router: Router): void => {
     res.send(<TodoFilter filters={urls} />)
   })
 
-  router.get('/todo-list', (req: Request, res: Response) => res.send(<TodoList todos={todos} filters={urls} />))
+  router.get('/todo-list', (req: Request, res: Response) => {
+    rqRedis({
+      data: {
+        todos: '*'
+      }
+    }, modelOptions).then(({ data: { todos } }: { data: { todos: Todo[] } }) =>
+      res.send(<TodoList todos={todos} filters={urls} />)
+    )
+  })
   // this can be migrated to FE
   router.get('/toggle-all', (req: Request, res: Response) => {
-    res.send(`${todos.filter(t => !t.completed).length === 0 && todos.length !== 0}`)
+    rqRedis({
+      data: {
+        todos: '*'
+      }
+    }, modelOptions).then(({ data: { todos } }: { data: { todos: Todo[] } }) =>
+      res.send(`${todos.filter(t => t.completed === '').length === 0 && todos.length !== 0}`)
+    )
   })
   // this can be migrated to FE
   router.get('/completed', (req: Request, res: Response) => {
-    res.send(todos.filter(t => t.completed).length ? 'block' : 'none')
+    // res.send(todos.filter(t => t.completed).length ? 'block' : 'none')
+    rqRedis({
+      data: {
+        todos: '*'
+      }
+    }, modelOptions).then(({ data: { todos } }: { data: { todos: Todo[] } }) =>
+      res.send(todos.filter(t => t.completed === 'completed').length ? 'block' : 'none')
+    )
   })
 }

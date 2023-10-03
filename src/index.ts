@@ -9,8 +9,6 @@ app.use(cacheControl)
 
 todoApp(app)
 
-app.use('/learn.json', (req, res) => { res.sendFile('{}') })
-
 const port = process.env.PORT ?? 3000
 app.listen(port, () => { console.log(`Server is running on port ${port}`) })
 

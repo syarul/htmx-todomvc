@@ -7,8 +7,8 @@ export const TodoCheck: React.FC<Todo> = ({ id, completed }) => (
   <input
     className="toggle"
     type="checkbox"
-    defaultChecked={completed}
-    hx-patch={`${lambdaPath}/toggle-todo?id=${id}&completed=${completed}`}
+    defaultChecked={completed === 'completed'}
+    hx-patch={`${lambdaPath}/toggle-todo?id=${id}&completed=${completed === 'completed' ? '' : 'completed'}`}
     hx-target="closest <li/>"
     hx-swap="outerHTML"
     _={`
@@ -37,10 +37,10 @@ export const EditTodo: React.FC<Todo> = ({ id, text, editing }) => (
     autoFocus/>
 )
 
-export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
+export const TodoItem: React.FC<Todo> = ({ id, text, completed }) => (
   <li
     key={id}
-    className={classNames('todo', { completed, editing })}
+    className={classNames('todo', { completed })}
     _={`
       on destroy my.querySelector('button').click()
       on show wait 20ms
@@ -82,7 +82,7 @@ export const TodoItem: React.FC<Todo> = ({ id, text, completed, editing }) => (
         `}
       />
     </div>
-    <EditTodo id={id} text={text} editing={editing}/>
+    <EditTodo id={id} text={text}/>
   </li>
 )
 

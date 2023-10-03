@@ -14,13 +14,14 @@ export interface Request extends ExpressRequest {
     id: string
     hash: string
     editing: string
+    completed: string
   }
 }
 
 export interface Todo {
   id: string
   text?: string
-  completed?: boolean
+  completed?: string
   editing?: boolean
 }
 
