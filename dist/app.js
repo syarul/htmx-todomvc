@@ -8,13 +8,13 @@ const crypto_1 = __importDefault(require("crypto"));
 const components_1 = require("./components");
 const fs_1 = require("fs");
 const path_1 = __importDefault(require("path"));
-const todosFile = path_1.default.join('/tmp', 'todos.json');
-const urlsFile = path_1.default.join('/tmp', 'urls.json');
+const todosFile = path_1.default.join(process.cwd(), 'todos.json');
+const urlsFile = path_1.default.join(process.cwd(), 'urls.json');
 const store = (file, data) => {
-    const directory = path_1.default.dirname(file);
-    if (!(0, fs_1.existsSync)(directory)) {
-        (0, fs_1.mkdirSync)(directory, { recursive: true });
-    }
+    // const directory = path.dirname(file)
+    // if (!existsSync(directory)) {
+    // mkdirSync(directory, { recursive: true })
+    // }
     if (data) {
         (0, fs_1.writeFileSync)(file, JSON.stringify(data));
         return data;
