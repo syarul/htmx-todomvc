@@ -8,8 +8,8 @@ const crypto_1 = __importDefault(require("crypto"));
 const components_1 = require("./components");
 const fs_1 = require("fs");
 const path_1 = __importDefault(require("path"));
-const todosFile = path_1.default.join(process.cwd(), 'tmp', 'todos.json');
-const urlsFile = path_1.default.join(process.cwd(), 'tmp', 'urls.json');
+const todosFile = path_1.default.join('/tmp', 'todos.json');
+const urlsFile = path_1.default.join('/tmp', 'urls.json');
 const store = (file, data) => {
     // const directory = path.dirname(file)
     // if (!existsSync(directory)) {
