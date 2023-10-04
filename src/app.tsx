@@ -3,18 +3,15 @@ import crypto from 'crypto'
 import { type Router, type Response } from 'express'
 import { type Request, type Todo, type filter } from './types'
 import { EditTodo, MainTemplate, TodoFilter, TodoItem, TodoList } from './components'
-import { readFileSync, writeFileSync/* , existsSync, mkdirSync */ } from 'fs'
+import { readFileSync, writeFileSync } from 'fs'
 import path from 'path'
 const todosFile = path.join('/tmp', 'todos.json')
 const urlsFile = path.join('/tmp', 'urls.json')
 
 const store = (file: string, data?: any): any => {
-  // const directory = path.dirname(file)
-  // if (!existsSync(directory)) {
-  // mkdirSync(directory, { recursive: true })
-  // }
   if (data) {
     writeFileSync(file, JSON.stringify(data))
+    console.log(readFileSync(file, 'utf-8'))
     return data
   }
   return JSON.parse(readFileSync(file, 'utf-8'))

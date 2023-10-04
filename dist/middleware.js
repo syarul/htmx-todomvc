@@ -16,7 +16,6 @@ exports.processResponse = processResponse;
 function cacheControl(req, res, next) {
     res.setHeader('Content-Type', 'text/html');
     res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
-    res.setHeader('Permissions-Policy', 'attribution-reporting=(), run-ad-auction=(), join-ad-interest-group=(), idle-detection=(), browsing-topics=()');
     next();
 }
 exports.cacheControl = cacheControl;

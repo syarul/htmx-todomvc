@@ -16,6 +16,5 @@ export function processResponse (req: Request, res: Response, next: NextFunction
 export function cacheControl (req: Request, res: Response, next: NextFunction): void {
   res.setHeader('Content-Type', 'text/html')
   res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate')
-  res.setHeader('Permissions-Policy', 'attribution-reporting=(), run-ad-auction=(), join-ad-interest-group=(), idle-detection=(), browsing-topics=()')
   next()
 }

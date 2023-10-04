@@ -11,12 +11,9 @@ const path_1 = __importDefault(require("path"));
 const todosFile = path_1.default.join('/tmp', 'todos.json');
 const urlsFile = path_1.default.join('/tmp', 'urls.json');
 const store = (file, data) => {
-    // const directory = path.dirname(file)
-    // if (!existsSync(directory)) {
-    // mkdirSync(directory, { recursive: true })
-    // }
     if (data) {
         (0, fs_1.writeFileSync)(file, JSON.stringify(data));
+        console.log((0, fs_1.readFileSync)(file, 'utf-8'));
         return data;
     }
     return JSON.parse((0, fs_1.readFileSync)(file, 'utf-8'));
