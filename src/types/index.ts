@@ -8,15 +8,6 @@ declare module 'react' {
   }
 }
 
-export interface Request extends ExpressRequest {
-  query: {
-    text: string
-    id: string
-    hash: string
-    editing: string
-  }
-}
-
 export interface Todo {
   id: string
   text?: string
@@ -37,4 +28,18 @@ export interface filter {
 
 export interface Filter {
   filters: filter[]
+}
+
+export interface Request extends ExpressRequest {
+  query: {
+    text: string
+    id: string
+    hash: string
+    editing: string
+  }
+  body: { // cache todos in body request
+    todos: Todo[]
+    filters: filter[]
+    todo: Todo
+  }
 }

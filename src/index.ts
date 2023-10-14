@@ -1,11 +1,12 @@
 import express from 'express'
 import todoApp from './app'
-import { cacheControl, processResponse } from './middleware'
+import { cacheControl, processResponse, storeMiddleware } from './middleware'
 
 const app = express()
 
 app.use(processResponse)
 app.use(cacheControl)
+app.use(storeMiddleware)
 
 todoApp(app)
 
