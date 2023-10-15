@@ -25,11 +25,23 @@ export function cacheControl (req: Request, res: Response, next: NextFunction): 
 export const todos = path.join('/tmp', 'todos.json')
 export const filters = path.join('/tmp', 'urls.json')
 
+type Data = Record<string, any>
 // simulate async storage
-const store = async (file: string, data?: any): Promise<any> => {
+const store = async (file: string, data?: any, selector?: string, selectorValue?: string, remove?: boolean): Promise<any> => {
   if (data) {
-    writeFileSync(file, JSON.stringify(data))
-    return data
+    const dataStore: Data[] = JSON.parse(readFileSync(file, 'utf-8'))
+    if (!selector && !(data instanceof Array)) {
+      writeFileSync(file, JSON.stringify([...dataStore, data]))
+    } else if (selector) {
+      if (!remove) {
+        writeFileSync(file, JSON.stringify(dataStore.map((d: Data) => d[selector] === selectorValue ? { ...d, ...data } : d)))
+      } else {
+        writeFileSync(file, JSON.stringify(dataStore.filter((d: Data) => d[selector] !== selectorValue)))
+      }
+    } else {
+      writeFileSync(file, JSON.stringify(data))
+    }
+    return dataStore
   }
   return JSON.parse(readFileSync(file, 'utf-8'))
 }
@@ -46,7 +58,11 @@ export function storeMiddleware (req: Request, res: Response, next: NextFunction
   req.body = req.body || {}
   Promise.all([
     store(todos).then(todos => {
-      req.body.todos = todos || []
+      if (req.query.id) {
+        req.body.todo = todos.find((d: Data) => d.id === req.query.id)
+      } else {
+        req.body.todos = todos || []
+      }
     }).catch(catcher),
     store(filters).then(filters => {
       req.body.filters = filters || urls
@@ -56,6 +72,6 @@ export function storeMiddleware (req: Request, res: Response, next: NextFunction
   }).catch(catcher)
 }
 
-export function updateStoreMiddleware (target: string, data: any, next: NextFunction): void {
-  store(target, data).then(() => { next() }).catch(catcher)
+export function updateStoreMiddleware (target: string, data: any, next: NextFunction, selector?: string, selectorValue?: string, remove?: boolean): void {
+  store(target, data, selector, selectorValue, remove).then(() => { next() }).catch(catcher)
 }
