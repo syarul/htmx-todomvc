@@ -1,5 +1,4 @@
 import React from 'react'
-import crypto from 'crypto'
 import { type Router, type Response, type NextFunction } from 'express'
 import { type Request } from './types'
 import { MainTemplate, EditTodo, TodoFilter, TodoItem } from './components'
@@ -23,9 +22,8 @@ export default (router: Router): void => {
   })
 
   router.patch('/toggle-todo', (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.query
     req.body.todo = { ...req.body.todo, completed: !req.body.todo.completed }
-    updateStoreMiddleware(todosFile, req.body.todo, next, 'id', id)
+    updateStoreMiddleware(todosFile, req.body.todo, next, 'update', req.query.id)
   }, (req: Request, res: Response) => res.send(<TodoItem {...req.body.todo}/>))
 
   router.patch('/edit-todo', (req: Request, res: Response) => {
@@ -36,11 +34,11 @@ export default (router: Router): void => {
     // In a proper manner, this should always be sanitized
     const { id, text } = req.query
     req.body.todo = { ...req.body.todo, text }
-    updateStoreMiddleware(todosFile, req.body.todo, next, 'id', id)
+    updateStoreMiddleware(todosFile, req.body.todo, next, 'update', id)
   }, (req: Request, res: Response) => res.send(<TodoItem {...req.body.todo}/>))
 
   router.delete('/remove-todo', (req: Request, res: Response, next: NextFunction) => {
-    updateStoreMiddleware(todosFile, req.body.todo, next, 'id', req.query.id, true)
+    updateStoreMiddleware(todosFile, {}, next, 'remove', req.query.id)
   }, (req: Request, res: Response) => res.send(''))
 
   router.get('/new-todo', (req: Request, res: Response, next: NextFunction) => {
@@ -50,8 +48,8 @@ export default (router: Router): void => {
       res.send('')
       next()
     } else {
-      req.body.todo = { id: crypto.randomUUID(), text, completed: false }
-      updateStoreMiddleware(todosFile, req.body.todo, next)
+      req.body.todo = { id: '', text, completed: false }
+      updateStoreMiddleware(todosFile, req.body.todo, next, 'create')
     }
   }, (req: Request, res: Response) => req.query.text.length && res.send(<TodoItem {...req.body.todo}/>))
 
