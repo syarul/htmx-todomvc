@@ -26,7 +26,7 @@ export const EditTodo: React.FC<Todo> = ({ id, text, editing }) => (
     className="edit"
     name="text"
     defaultValue={editing ? text : ''}
-    hx-trigger="keyup[keyCode==13], text" // capture Enter, ESC and text input
+    hx-trigger="keyup[keyCode==13], text" // capture Enter and text input
     hx-get={`${lambdaPath}/update-todo?id=${id}`}
     hx-target="closest li"
     hx-swap="outerHTML"
