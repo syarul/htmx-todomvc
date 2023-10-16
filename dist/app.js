@@ -11,7 +11,7 @@ exports.default = (router) => {
     router.get('/get-hash', (req, res, next) => {
         const hash = req.query.hash.length ? req.query.hash : '/#all';
         req.body.filters = req.body.filters.map(f => ({ ...f, selected: f.name === hash.slice(2) }));
-        (0, middleware_1.updateStoreMiddleware)(middleware_1.filters, req.body.filters, next);
+        (0, middleware_1.updateStoreMiddleware)(middleware_1.filters, req.body.filters, req, next);
     }, (req, res) => res.send(react_1.default.createElement(components_1.TodoFilter, { filters: req.body.filters })));
     router.get('/learn.json', (req, res) => res.send('{}'));
     router.get('/update-counts', (req, res) => {
@@ -23,7 +23,7 @@ exports.default = (router) => {
     });
     router.patch('/toggle-todo', (req, res, next) => {
         req.body.todo = { ...req.body.todo, completed: !req.body.todo.completed };
-        (0, middleware_1.updateStoreMiddleware)(middleware_1.todos, req.body.todo, next, 'update', req.query.id);
+        (0, middleware_1.updateStoreMiddleware)(middleware_1.todos, req.body.todo, req, next, 'update', req.query.id);
     }, (req, res) => res.send(react_1.default.createElement(components_1.TodoItem, { ...req.body.todo })));
     router.patch('/edit-todo', (req, res) => {
         res.send(react_1.default.createElement(components_1.EditTodo, { ...req.query, editing: true }));
@@ -32,10 +32,10 @@ exports.default = (router) => {
         // In a proper manner, this should always be sanitized
         const { id, text } = req.query;
         req.body.todo = { ...req.body.todo, text };
-        (0, middleware_1.updateStoreMiddleware)(middleware_1.todos, req.body.todo, next, 'update', id);
+        (0, middleware_1.updateStoreMiddleware)(middleware_1.todos, req.body.todo, req, next, 'update', id);
     }, (req, res) => res.send(react_1.default.createElement(components_1.TodoItem, { ...req.body.todo })));
     router.delete('/remove-todo', (req, res, next) => {
-        (0, middleware_1.updateStoreMiddleware)(middleware_1.todos, {}, next, 'remove', req.query.id);
+        (0, middleware_1.updateStoreMiddleware)(middleware_1.todos, {}, req, next, 'remove', req.query.id);
     }, (req, res) => res.send(''));
     router.get('/new-todo', (req, res, next) => {
         // In a proper manner, this should always be sanitized
@@ -46,12 +46,12 @@ exports.default = (router) => {
         }
         else {
             req.body.todo = { id: '', text, completed: false };
-            (0, middleware_1.updateStoreMiddleware)(middleware_1.todos, req.body.todo, next, 'create');
+            (0, middleware_1.updateStoreMiddleware)(middleware_1.todos, req.body.todo, req, next, 'create');
         }
     }, (req, res) => req.query.text.length && res.send(react_1.default.createElement(components_1.TodoItem, { ...req.body.todo })));
     router.get('/todo-filter', (req, res, next) => {
         req.body.filters = req.body.filters.map(f => ({ ...f, selected: f.name === req.query.id }));
-        (0, middleware_1.updateStoreMiddleware)(middleware_1.filters, req.body.filters, next);
+        (0, middleware_1.updateStoreMiddleware)(middleware_1.filters, req.body.filters, req, next);
     }, (req, res) => res.send(react_1.default.createElement(components_1.TodoFilter, { filters: req.body.filters })));
     // this can be migrated to FE
     router.get('/toggle-all', (req, res) => {

@@ -10,7 +10,7 @@ export default (router: Router): void => {
   router.get('/get-hash', (req: Request, res: Response, next: NextFunction) => {
     const hash = req.query.hash.length ? req.query.hash : '/#all'
     req.body.filters = req.body.filters.map(f => ({ ...f, selected: f.name === hash.slice(2) }))
-    updateStoreMiddleware(filtersFile, req.body.filters, next)
+    updateStoreMiddleware(filtersFile, req.body.filters, req, next)
   }, (req: Request, res: Response) => res.send(<TodoFilter filters={req.body.filters} />))
 
   router.get('/learn.json', (req: Request, res: Response) => res.send('{}'))
@@ -23,7 +23,7 @@ export default (router: Router): void => {
 
   router.patch('/toggle-todo', (req: Request, res: Response, next: NextFunction) => {
     req.body.todo = { ...req.body.todo, completed: !req.body.todo.completed }
-    updateStoreMiddleware(todosFile, req.body.todo, next, 'update', req.query.id)
+    updateStoreMiddleware(todosFile, req.body.todo, req, next, 'update', req.query.id)
   }, (req: Request, res: Response) => res.send(<TodoItem {...req.body.todo}/>))
 
   router.patch('/edit-todo', (req: Request, res: Response) => {
@@ -34,11 +34,11 @@ export default (router: Router): void => {
     // In a proper manner, this should always be sanitized
     const { id, text } = req.query
     req.body.todo = { ...req.body.todo, text }
-    updateStoreMiddleware(todosFile, req.body.todo, next, 'update', id)
+    updateStoreMiddleware(todosFile, req.body.todo, req, next, 'update', id)
   }, (req: Request, res: Response) => res.send(<TodoItem {...req.body.todo}/>))
 
   router.delete('/remove-todo', (req: Request, res: Response, next: NextFunction) => {
-    updateStoreMiddleware(todosFile, {}, next, 'remove', req.query.id)
+    updateStoreMiddleware(todosFile, {}, req, next, 'remove', req.query.id)
   }, (req: Request, res: Response) => res.send(''))
 
   router.get('/new-todo', (req: Request, res: Response, next: NextFunction) => {
@@ -49,13 +49,13 @@ export default (router: Router): void => {
       next()
     } else {
       req.body.todo = { id: '', text, completed: false }
-      updateStoreMiddleware(todosFile, req.body.todo, next, 'create')
+      updateStoreMiddleware(todosFile, req.body.todo, req, next, 'create')
     }
   }, (req: Request, res: Response) => req.query.text.length && res.send(<TodoItem {...req.body.todo}/>))
 
   router.get('/todo-filter', (req: Request, res: Response, next: NextFunction) => {
     req.body.filters = req.body.filters.map(f => ({ ...f, selected: f.name === req.query.id }))
-    updateStoreMiddleware(filtersFile, req.body.filters, next)
+    updateStoreMiddleware(filtersFile, req.body.filters, req, next)
   }, (req: Request, res: Response) => res.send(<TodoFilter filters={req.body.filters}/>))
 
   // this can be migrated to FE

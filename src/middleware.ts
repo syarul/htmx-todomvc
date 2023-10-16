@@ -112,16 +112,17 @@ const store = async ({ file, update, selectorValue, action = 'all' }: Data): Pro
     if (keys.length) {
       id = `${parseInt(keys.pop()) + 1}`
     }
-    await rqRedis({
+    const res = await rqRedis({
       [file]: {
         [action]: {
           $params: {
             data: { ...update, id }
           },
-          [file === 'todos' ? 'id' : 'name']: 1
+          ...(file === 'todos' ? { id: 1, text: 1, completed: 1 } : { name: 1 })
         }
       }
     }, selectedModel)
+    return normalize(res[file][action])
   } else if (action === 'remove') {
     await rqRedis({
       [file]: {
@@ -196,6 +197,11 @@ export function storeMiddleware (req: Request, res: Response, next: NextFunction
   load().then(() => { next() }).catch(catcher)
 }
 
-export function updateStoreMiddleware (file: string, update: any, next: NextFunction, action?: string, selectorValue?: string): void {
-  store({ file, update, selectorValue, action }).then(() => { next() }).catch(catcher)
+export function updateStoreMiddleware (file: string, update: any, req: Request, next: NextFunction, action?: string, selectorValue?: string): void {
+  store({ file, update, selectorValue, action }).then((result) => {
+    if (file === todos && action === 'create') {
+      req.body.todo = result
+    }
+    next()
+  }).catch(catcher)
 }
