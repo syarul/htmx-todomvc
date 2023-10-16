@@ -3,6 +3,8 @@
 
 HTMX TodoMVC app with TS, Express and JSX
 
+![Vercel](https://vercelbadge.vercel.app/api/syarul/htmx-todomvc)
+
 [https://htmx-todomvc.vercel.app/](https://htmx-todomvc.vercel.app/) 
 
 ### What's already in place
