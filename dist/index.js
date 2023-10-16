@@ -12,6 +12,7 @@ const app = (0, express_1.default)();
 exports.app = app;
 app.use(middleware_1.processResponse);
 app.use(middleware_1.cacheControl);
+app.use(middleware_1.storeMiddleware);
 (0, app_1.default)(app);
 const port = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 3000;
 app.listen(port, () => { console.log(`Server is running on port ${port}`); });

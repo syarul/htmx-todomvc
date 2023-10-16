@@ -15,7 +15,7 @@ const TodoCheck = ({ id, completed }) => (react_1.default.createElement("input",
           my.click()
     ` }));
 exports.TodoCheck = TodoCheck;
-const EditTodo = ({ id, text, editing }) => (react_1.default.createElement("input", { className: "edit", name: "text", defaultValue: editing ? text : '', "hx-trigger": "keyup[keyCode==13], text" // capture Enter, ESC and text input
+const EditTodo = ({ id, text, editing }) => (react_1.default.createElement("input", { className: "edit", name: "text", defaultValue: editing ? text : '', "hx-trigger": "keyup[keyCode==13], text" // capture Enter and text input
     , "hx-get": `${__1.lambdaPath}/update-todo?id=${id}`, "hx-target": "closest li", "hx-swap": "outerHTML", _: `
       on keyup[keyCode==27] remove .editing from closest <li/>
       on htmx:afterRequest send focus to <input.new-todo/>
