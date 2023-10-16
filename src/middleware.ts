@@ -1,8 +1,5 @@
 import { type Request, type Response, type NextFunction } from 'express'
-// import { type filter } from './types'
 import { renderToString } from 'react-dom/server'
-// import { readFileSync, writeFileSync } from 'fs'
-// import path from 'path'
 import Redis from 'ioredis'
 import * as dotenv from 'dotenv'
 
@@ -78,12 +75,12 @@ export function cacheControl (req: Request, res: Response, next: NextFunction): 
 }
 
 // replaceable with database model
-export const todos = 'todos' // path.join('/tmp', 'todos.json')
-export const filters = 'filters' // path.join('/tmp', 'urls.json')
+export const todos = 'todos'
+export const filters = 'filters'
 
 type Data = Record<string, any>
 
-const normalize = (d: any): Data => {
+const normalize = (d: Data): Data => {
   const o: Data = {}
   for (const attr in d) {
     if (d[attr] === 'false' || d[attr] === 'true') {
@@ -186,7 +183,7 @@ export function storeMiddleware (req: Request, res: Response, next: NextFunction
       if (req.query.id && file === todos) {
         await store({ file, selectorValue: req.query.id, action: 'get' }).then(result => {
           req.body.todo = result
-        })
+        }).catch(catcher)
       } else {
         await store({ file }).then(result => {
           req.body[file] = result || []
