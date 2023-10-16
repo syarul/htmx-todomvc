@@ -4,7 +4,6 @@
 HTMX TodoMVC app with TS, Express and JSX
 
 [https://htmx-todomvc.vercel.app/](https://htmx-todomvc.vercel.app/) 
-> poor caching need moved to db
 
 ### What's already in place
 - ~~add todo~~
